@@ -66,7 +66,7 @@ result <- overica(
 
 
 
-# Scientific Background: Understanding the Covariance Matrix via the Cumulant Generating Function
+# Scientific Background: 
 
 In statistical analysis and parameter estimation, particularly within the `OverICA` package, it's crucial to comprehend the relationship between the **covariance matrix** and the **Cumulant Generating Function (CGF)**. This understanding underpins accurate parameter estimation and model fitting.
 
