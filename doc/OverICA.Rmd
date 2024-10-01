@@ -1,0 +1,190 @@
+
+---
+title: "Showcase OverICA"
+author: "Michel Nivard"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Showcase OverICA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Simulation Example
+
+This vignette demonstrates how to use the `OverIA` package to perform parameter estimation using Torch tensors and Empirical Cumulant Generating Functions (ECGF). The example includes generating non-Gaussian data, estimating parameters, aligning the estimated parameters with the true parameters using the Hungarian algorithm, and visualizing the results.
+
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Loading the Package](#loading-the-package)
+3. [Generating Non-Gaussian Data](#generating-non-gaussian-data)
+4. [Parameter Estimation](#parameter-estimation)
+5. [Aligning Estimated Parameters](#aligning-estimated-parameters)
+6. [Visualizing the Results](#visualizing-the-results)
+7. [Conclusion](#conclusion)
+
+## Installation
+
+Before proceeding, ensure that you have the necessary dependencies installed. You can install the `OverICA` package from your local directory or repository once it's built. Additionally, install the required packages if you haven't already:
+
+```R
+# Install necessary packages
+install.packages(c("torch", "clue", "MASS", "devtools"))
+
+# Install OverICA package (replace 'path/to/package' with your actual path)
+# devtools::install("path/to/package/OverICA")
+```
+
+**Note:** Ensure that you have [Torch](https://torch.mlverse.org/) properly installed and configured on your system. Refer to the [torch documentation](https://torch.mlverse.org/) for installation instructions.
+
+## Loading the Package
+
+Load the `OverICA` package along with its dependencies:
+
+```R
+library(OverICA)
+library(torch)
+library(clue)
+library(MASS)
+```
+
+## Generating Non-Gaussian Data
+
+The `OverICA` package provides utilities to generate non-Gaussian data, which is essential for demonstrating the parameter estimation process. This example generates latent variables `z` from different non-Gaussian distributions and observes data `data` through a linear transformation.
+
+```R
+# Set seed for reproducibility
+set.seed(123)
+
+# Define parameters
+n <- 100000  # Number of observations
+k <- 24      # Number of latent variables
+p <- 10      # Number of observed variables
+
+# Generate latent variables z (n x k) using non-Gaussian distributions
+z <- generate_matrix(n, k)
+
+# Generate a true parameter matrix A_true (p x k) with values between -0.5 and 0.5
+A_true <- matrix(runif(p * k, -0.5, 0.5), p, k)
+
+# Generate observed data: data = z %*% t(A_true)
+data <- z %*% t(A_true)
+```
+
+### Understanding the Data Generation
+
+- **Latent Variables (`z`)**: Generated using a mix of positively skewed, negatively skewed, and kurtotic distributions to introduce non-Gaussianity.
+- **True Parameter Matrix (`A_true`)**: A randomly initialized matrix that defines the linear relationship between latent variables and observed data.
+- **Observed Data (`data`)**: Created by multiplying the latent variables with the transpose of the true parameter matrix, introducing dependencies and non-Gaussian characteristics.
+
+## Parameter Estimation
+
+The core functionality of the `OverICA` package is to estimate the parameter matrix `A` from the observed data. This is achieved by optimizing the parameters using Torch's tensor operations and advanced optimization algorithms.
+
+```R
+# Start timing the parameter estimation
+start_time <- Sys.time()
+
+# Call the estimation function
+result <- overica(
+  data = data,
+  k = k,
+  n_batch = 4096,
+  num_t_vals = 12,
+  tbound = 0.2,
+  lambda = 0,
+  sigma = 3,
+  hidden_size = 10,
+  use_adam = TRUE,
+  use_lbfgs = FALSE,
+  adam_epochs = 8000,
+  adam_lr = 0.1,
+  lbfgs_epochs = 45,
+  lr_decay = 0.999
+)
+
+# End timing
+end_time <- Sys.time()
+elapsed_time <- end_time - start_time
+cat("Parameter estimation completed in:", elapsed_time, "seconds.\n")
+```
+
+### Explanation of Parameters
+
+- **`data`**: The observed data matrix.
+- **`k`**: Number of latent variables.
+- **`n_batch`**: Batch size for the neural network.
+- **`num_t_vals`**: Number of t-values used in ECGF computation.
+- **`tbound`**: Bound for generating random t-values.
+- **`lambda`**: L1 regularization parameter for sparsity.
+- **`sigma`**: Covariance penalty parameter to enforce covariance constraints.
+- **`hidden_size`**: Number of hidden units in the neural network.
+- **`use_adam`**: Whether to use the Adam optimizer initially.
+- **`use_lbfgs`**: Whether to use the L-BFGS optimizer after Adam.
+- **`adam_epochs` & `lbfgs_epochs`**: Number of epochs for each optimizer.
+- **`adam_lr` & `lbfgs_lr`**: Learning rates for each optimizer.
+- **`lr_decay`**: Learning rate decay factor.
+
+**Note:** Adjust these parameters based on your specific use case and computational resources.
+
+## Aligning Estimated Parameters
+
+After estimating the parameter matrix `A_est`, it's essential to align it with the true parameter matrix `A_true` to evaluate the estimation accuracy. The `align_columns` function uses the Hungarian algorithm to maximize the absolute correlation between the estimated and true columns.
+
+```R
+# Retrieve estimated A matrix
+A_est <- result$A_est
+
+# Align estimated A with true A using the Hungarian algorithm
+A_aligned <- align_columns(as.matrix(A_est, p, k), A_true)
+```
+
+### Evaluating Alignment
+
+The `align_columns` function prints the correlations between aligned columns and the number of correlations exceeding 0.9, indicating high similarity.
+
+```R
+# Example Output:
+# [1] 0.95 0.92 0.93 ... (correlations for each pair)
+# [1] 12 (number of correlations > 0.9)
+```
+
+**Interpretation:** High correlation values close to 1 indicate that the estimated parameters closely match the true parameters after alignment.
+
+## Visualizing the Results
+
+Visual comparison between the estimated parameters and the true parameters provides a clear understanding of the estimation accuracy. Plotting the scaled aligned estimated parameters against the scaled true parameters highlights the similarities.
+
+```R
+# Plot the scaled aligned estimated A against the scaled true A
+plot(scale(A_aligned), scale(A_true),
+     main = "Comparison of Estimated and True Parameters",
+     xlab = "Scaled Estimated A",
+     ylab = "Scaled True A",
+     pch = 19, col = rgb(0, 0, 1, 0.5))
+abline(0, 1, col = "red", lwd = 2)  # 45-degree line for reference
+```
+
+
+
+**Interpretation:** Points lying close to the red 45-degree line indicate accurate parameter estimation. Deviations from the line highlight discrepancies between estimated and true parameters.
+
+## Conclusion
+
+This simulation example showcases the capabilities of the `OverICA` package in estimating parameters from non-Gaussian data using advanced tensor operations and optimization techniques. By aligning the estimated parameters with the true parameters and visualizing the results, users can assess the accuracy and effectiveness of the estimation process.
+
+For more advanced usage and customization, refer to the package's [github](https://github.com/MichelNivard/OverICA) and explore additional functions and features.
+
+---
+
+# References
+
+- [Torch for R](https://torch.mlverse.org/)
+- [Hungarian Algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm)
+- [Empirical Cumulant Generating Functions](https://en.wikipedia.org/wiki/Cumulant)
+
+```
+
+---
+
