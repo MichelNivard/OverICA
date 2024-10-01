@@ -25,7 +25,7 @@ install.packages(c("torch", "clue", "MASS", "devtools"))
 
 ## Generic usage
 
-Here is a generic call to the `overica()` function the data in a n by p matrix (n ob ad p variables), k is the number of components, pick k below $\frac{p^2}{4}$
+Here is a generic call to the `overica()` function the data in a n by p matrix (n ob ad p variables), k is the number of components, pick k below $\frac{p^2}{4}$. **be aware** this is a sort of neural network (see scientific background below) undertraining and relying on suboptimal or generic setings will give you bad results, but no warnings! You will extract some results but you won't know their bad!
 
 ```R
 # Call the estimation function
@@ -107,10 +107,16 @@ Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, de
 
 ## Generalized covariances
 
-So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous wrok is that you can evaluate the cumulant generating functino at other values of t to get additional information on the distribution of the data. 
+So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous work is that you can evaluate the cumulant generating functino at other values of $t$ to get additional information on the distribution of the data. in `OverICA` we evaluate the emperical cumulant generating fucntion of the data at a number of points, and we train a model to generate data that matches the emperical data at these points, which means it has to learn the loadigns in matrix $A$.
 
 
+## Generative adverserial networks.
+ 
+A generative advrserial network is a neural network that "learns" to approximate a data distribution. In outr case the network will learn to mimic the generalized covariances of the actual data. The process is depicted in the diagram below:
 
+![image](https://github.com/user-attachments/assets/56be065f-bbd5-4877-9f71-ca0ba9633c56)
+
+We start with 1 sample of random normally distributed data vectors ($z$)  
 
 
 
