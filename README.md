@@ -23,9 +23,34 @@ install.packages(c("torch", "clue", "MASS", "devtools"))
 # devtools::install_github("MichelNivard/OverICA")
 ```
 
+## Generic usage
+
+Here is a generic call to the `overica()` function the data in a n by p matrix (n ob ad p variables), k is the number of components, pick k below $\frac{p^2}{4}$
+
+```R
+# Call the estimation function
+result <- overica(
+  data = data,
+  k = k,
+  n_batch = 4096,
+  num_t_vals = 12,
+  tbound = 0.2,
+  lambda = 0,
+  sigma = 3,
+  hidden_size = 10,
+  use_adam = TRUE,
+  use_lbfgs = FALSE,
+  adam_epochs = 8000,
+  adam_lr = 0.1,
+  lbfgs_epochs = 45,
+  lr_decay = 0.999
+)
+
+```
 
 
-# Background: Understanding the Covariance Matrix via the Cumulant Generating Function
+
+# Scientific Background: Understanding the Covariance Matrix via the Cumulant Generating Function
 
 In statistical analysis and parameter estimation, particularly within the `OverICA` package, it's crucial to comprehend the relationship between the **covariance matrix** and the **Cumulant Generating Function (CGF)**. This understanding underpins accurate parameter estimation and model fitting.
 
