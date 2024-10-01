@@ -9,8 +9,23 @@ this code estimates A by levraging the differences betwene the observed generali
 
 Unlike Podosinnikova et al. I use back propagation to estimate the parameters. Based on ideas in Ging et al (2019) I define a generative neura network for each of the k latent variables (a multi=layer perceptron), and a matrix A that mixed these variables into p observed pseudo variables. I train the model to approzimate the the generalized covariacne matrices of the obersed data. Unlike Deng et al. I explicitly penalize the loss to ensure the latent variables remain uncorrelated.
 
+**the key gain over other overcomplete ICA techniques is** that we only use 2nd order statistics, no skewness and kurtosis related math needed! Which is great because higher order moments like skewness and kuertosis, or higher order cumulants usually means high dimensional opimization. 
 
-# Understanding the Covariance Matrix via the Cumulant Generating Function
+# installation
+
+Before proceeding, ensure that you have the necessary dependencies installed. You can install the `OverICA` package from your local directory or repository once it's built. Additionally, install the required packages if you haven't already:
+
+```R
+# Install necessary packages
+install.packages(c("torch", "clue", "MASS", "devtools"))
+
+# Install OverICA package (replace 'path/to/package' with your actual path)
+# devtools::install_github("MichelNivard/OverICA")
+```
+
+
+
+# Background: Understanding the Covariance Matrix via the Cumulant Generating Function
 
 In statistical analysis and parameter estimation, particularly within the `OverICA` package, it's crucial to comprehend the relationship between the **covariance matrix** and the **Cumulant Generating Function (CGF)**. This understanding underpins accurate parameter estimation and model fitting.
 
