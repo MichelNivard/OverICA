@@ -112,11 +112,15 @@ So we can define the covariances and emans in terms of the cumulant generating f
 
 ## Generative adverserial networks.
  
-A generative advrserial network is a neural network that "learns" to approximate a data distribution. In outr case the network will learn to mimic the generalized covariances of the actual data. The process is depicted in the diagram below:
+We base our inference on **Ding et al.** A generative advrserial network is a neural network that "learns" to approximate a data distribution. In outr case the network will learn to mimic the generalized covariances of the actual data. The process is depicted in the diagram below:
 
 ![image](https://github.com/user-attachments/assets/56be065f-bbd5-4877-9f71-ca0ba9633c56)
 
-We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural entwork ( a multi layer perceptron) which is just an expensive workd for a very flxible non-linear transformation. which transforms $z_i$ into $s_i$.
+We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural entwork ( a multi layer perceptron) which is just an expensive workd for a very flxible non-linear transformation. which transforms $z_i$ into $s_i$. Unlike **Dign et al.** we implement a constraint that ensures the variables $s$ are uncorrelated and standardized (constraining their covariance to an identity matrix). the variabes s are lrelated to the observed variables witht eh ICA formula:
+
+$$\hat{y} = As$$
+
+
 
 
 
