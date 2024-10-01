@@ -42,7 +42,9 @@ library(OverICA)
 
 ## Generic usage
 
-Here is a generic call to the `overica()` function the data in a n by p matrix (n ob ad p variables), k is the number of components, pick k below $\frac{p^2}{4}$. **be aware** this is a sort of neural network (see scientific background below) undertraining and relying on suboptimal or generic setings will give you bad results, but no warnings! You will extract some results but you won't know their bad!
+Here is a generic call to the `overica()` function the data in a n by p matrix (n ob ad p variables), k is the number of components, pick k below $\frac{p^2}{4}$.
+
+**be aware** this funciton fits a custom neural network (see scientific background below) undertraining and relying on suboptimal or generic setings will give you bad results, but no warnings! You will always extract some results but you won't know of they are bad!
 
 ```R
 # Call the estimation function
