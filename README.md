@@ -182,6 +182,10 @@ We arent interested in learning *specific* generalized covariances of the data, 
 -  Adjust Parameters: Update the model's parameters slightly in the direction that reduces the loss.
 
 
+## Other tools:
+
+- (Likelihood Free Overcomplete ICA)[https://github.com/dingchenwei/Likelihood-free_OICA]
+
 
 ## References:
 
