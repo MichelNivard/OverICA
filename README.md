@@ -142,7 +142,7 @@ We base our inference on **Ding et al.** A generative adverserial network is a n
 
 ![image](https://github.com/user-attachments/assets/56be065f-bbd5-4877-9f71-ca0ba9633c56)
 
-We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural nettwork ( a multi layer perceptron) which in our case is just a posh and very flexible generic non-linear transformation. the neura entwork transforms $z_i$ into $s_i$. Unlike **Ding et al.**, who pioneered this idea, we implement a constraint that ensures the variables $s$ are uncorrelated and standardized (constraining their covariance to an identity matrix). The variabes s are related to the simulated observed variables via the ICA formula:
+We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural nettwork ( a multi layer perceptron) which in our case is just a posh and very flexible generic non-linear transformation. the neural network transforms $z_i$ into $s_i$. Unlike **Ding et al.**, who pioneered this idea, we implement a constraint that ensures the variables $s$ are uncorrelated and standardized (constraining their covariance to an identity matrix). The variabes s are related to the simulated observed variables via the ICA formula:
 
 $$\hat{y} = As$$
 
@@ -180,6 +180,7 @@ We arent interested in learning *specific* generalized covariances of the data, 
 -  Gradient Descent: Use these gradients to determine the direction to adjust the parameters to minimize the loss.
 6.  Parameter Update:
 -  Adjust Parameters: Update the model's parameters slightly in the direction that reduces the loss.
+
 
 
 ## References:
