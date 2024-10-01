@@ -2,9 +2,9 @@
 
 **EXPERIMENTAL!!**
 
-the R package `OverICA` estimates overcomplete indepedent components (ICA), meaning it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
+the R package `OverICA` estimates overcomplete indepedent components (ICA), meaning it estimates the relation between latent variables andobserved variables in the data allowing there to be more latent then observed variables. We observe p variabes in matrix $y_{n,p}$, we estimate the matrix $A_{p,k}$ that contains the effects of k (non-gaussian) latent variables in $x_{n,k} on the observed variables. there are potentially more variables k then p. 
 
-y = Ax
+$$y = Ax^t$$
 
 this code estimates A by levraging the differences betweee the observed generalized covariance matrices and generalized means in the data and the model implied generalized covariance matrices and generalized means. This is based on ideas developed by Podosinnikova et al. (2019). 
 
