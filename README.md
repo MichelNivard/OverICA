@@ -49,7 +49,7 @@ The **covariance matrix** $\Sigma$ captures the pairwise linear relationships be
 
 2. **Second Derivatives (Covariances)**:
    
-   $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j} \right|_{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}$
+   $\left\frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j} \right|_{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}$
 
 Thus, the covariance matrix is formed by the second-order partial derivatives of the CGF evaluated at zero:
 
@@ -64,30 +64,9 @@ $$
 
 Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, derived from the second-order cumulants.
 
-## Practical Implications in `TorchECGF`
 
-Within the `TorchECGF` package, the **Empirical Cumulant Generating Function (ECGF)** is utilized to estimate the covariance matrix from observed data. By optimizing the ECGF, the package aligns the model's covariance structure with that of the data, facilitating accurate parameter estimation.
-
-### Workflow Overview
-
-1. **Generate Data**: Create non-Gaussian latent variables and observed data.
-2. **Estimate Parameters**: Use `estimate_parameters()` to optimize the model based on ECGF.
-3. **Align Parameters**: Align estimated parameters with true parameters using `align_columns()`.
-4. **Visualize Results**: Compare the estimated covariance matrix with the true covariance matrix.
-
-## Conclusion
-
-The covariance matrix is fundamentally a manifestation of the second-order cumulants derived from the Cumulant Generating Function. By leveraging the CGF, the `TorchECGF` package effectively estimates and aligns covariance structures, enabling robust parameter estimation in complex statistical models.
-
-For more detailed information and examples, please refer to the [Vignette](vignettes/simulation.Rmd) and the [Documentation](https://your.package.documentation.url).
-
----
 
 **References:**
-
-- [Torch for R](https://torch.mlverse.org/)
-- [Cumulant Generating Function](https://en.wikipedia.org/wiki/Cumulant)
-- [Hungarian Algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm)
 
 References:
 
