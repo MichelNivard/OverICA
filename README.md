@@ -184,7 +184,7 @@ We arent interested in learning *specific* generalized covariances of the data, 
 
 ## Other tools:
 
-- [https://github.com/dingchenwei/Likelihood-free_OICA] (Likelihood Free Overcomplete ICA)
+- [https://github.com/dingchenwei/Likelihood-free_OICA] Likelihood Free Overcomplete ICA
 - [https://github.com/gilgarmish/oica] Overcomplete ICA trough convex optimisation
 
 
