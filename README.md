@@ -110,17 +110,25 @@ Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, de
 So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous work is that you can evaluate the cumulant generating functino at other values of $t$ to get additional information on the distribution of the data. in `OverICA` we evaluate the emperical cumulant generating fucntion of the data at a number of points, and we train a model to generate data that matches the emperical data at these points, which means it has to learn the loadigns in matrix $A$.
 
 
+ $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}$ 
+
+ for $t_i$ and t_j_ != 0. 
+
+
 ## Generative adverserial networks.
  
 We base our inference on **Ding et al.** A generative advrserial network is a neural network that "learns" to approximate a data distribution. In outr case the network will learn to mimic the generalized covariances of the actual data. The process is depicted in the diagram below:
 
 ![image](https://github.com/user-attachments/assets/56be065f-bbd5-4877-9f71-ca0ba9633c56)
 
-We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural entwork ( a multi layer perceptron) which is just an expensive workd for a very flxible non-linear transformation. which transforms $z_i$ into $s_i$. Unlike **Dign et al.** we implement a constraint that ensures the variables $s$ are uncorrelated and standardized (constraining their covariance to an identity matrix). the variabes s are lrelated to the observed variables witht eh ICA formula:
+We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural entwork ( a multi layer perceptron) which is just an expensive workd for a very flxible non-linear transformation. which transforms $z_i$ into $s_i$. Unlike **Ding et al.** we implement a constraint that ensures the variables $s$ are uncorrelated and standardized (constraining their covariance to an identity matrix). the variabes s are  related to the simulated observed variables with the ICA formula:
 
 $$\hat{y} = As$$
 
+And the generalized covariances of the pseudo data $\hat{y}* are matched to the true data $y$ trough optimisation in torch. 
 
+## Inferences details
+We arent interested in learning *specific* generalizedcovariances of the data, so for each itteratino fo the optimizer we ample fresh values t and evaluete the emperical and model implied generalized covriances. this ensures we dont accidentally overfit to a specific poorly estimated set of emperical generalized covariances. 
 
 
 
