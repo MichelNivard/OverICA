@@ -154,8 +154,7 @@ And the generalized covariances of the pseudo data $\hat{y}$ are matched to the 
 We arent interested in learning *specific* generalized covariances of the data, so for each itteration of the optimizer we sample fresh values t and evaluate the emperical and model implied generalized covriances. This ensures we dont accidentally overfit to a specific poorly estimated set of emperical generalized covariances of the data.
 
 
-**References:**
-
+##References:
 
 **Podosinnikova, A.**, Perry, A., Wein, A. S., Bach, F., d’Aspremont, A., & Sontag, D. (2019, April). Overcomplete independent component analysis via SDP. In The 22nd international conference on artificial intelligence and statistics (pp. 2583-2592). PMLR.
 
