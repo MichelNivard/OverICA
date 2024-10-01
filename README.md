@@ -1,15 +1,29 @@
 ## OverICA
 
-the R package `OverICA` estiamtes overcomplete indepedent components, meaning it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
+the R package `OverICA` estimates overcomplete indepedent components (ICA), meaning it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
 
 y = Ax
 
-this code estimates A by levraging the differences betwene the observed generalized covariance matrices and means in the data and the model implied generalized covariance matrices and means. This is based on ideas developed by Podosinnikova et al. (2019). 
+this code estimates A by levraging the differences betweee the observed generalized covariance matrices and generalized means in the data and the model implied generalized covariance matrices and generalized means. This is based on ideas developed by Podosinnikova et al. (2019). 
+
+**We assume:**
+
+1. variables $x_i$  are non-gaussian (skewed, kurtotic sparse etc)
+2. variables $x_i$ are uncorrelated
+3. a single layer neural network applied to a gaussian variable can approximate the uncorrelarted latnent variables
 
 
-Unlike Podosinnikova et al. I use back propagation to estimate the parameters. Based on ideas in Ging et al (2019) I define a generative neura network for each of the k latent variables (a multi=layer perceptron), and a matrix A that mixed these variables into p observed pseudo variables. I train the model to approzimate the the generalized covariacne matrices of the obersed data. Unlike Deng et al. I explicitly penalize the loss to ensure the latent variables remain uncorrelated.
+Unlike Podosinnikova et al. I use backpropagation to estimate the parameters. Based on ideas in Ging et al (2019) I define a generative neural network for each of the k latent variables (a multi-layer perceptron), and a matrix A that mixed these variables into p observed pseudo variables. I train the model to approzimate the the generalized covariacne matrices of the obersed data. Unlike Deng et al. I explicitly penalize the loss to ensure the latent variables remain uncorrelated.
 
-**the key gain over other overcomplete ICA techniques is** that we only use 2nd order statistics, no skewness and kurtosis related math needed! Which is great because higher order moments like skewness and kuertosis, or higher order cumulants usually means high dimensional opimization. 
+**the key gain over other overcomplete ICA techniques is** that we only use 2nd order statistics, no skewness and kurtosis related math needed! Which is great because higher order moments like skewness and kurtosis, or higher order cumulants usually means high dimensional matrices and slow opimization. 
+
+**Warning:**
+
+
+Inferences is aproximate! Hereis an example concordance between the true and estimated loadings for a rpoblem with 20 observed and 50 latent variables. I didnt try very hard to optimize the parameters of the model to squeeze out maximum concurdance, and it could have definately trained longer, but take rto heart that these loadings are estimates not mathematical properties of the data like svd/eigen values.
+
+![image](https://github.com/user-attachments/assets/02578321-bed7-466a-bf6c-044642bd89af)
+
 
 # installation
 
@@ -45,7 +59,6 @@ result <- overica(
   lbfgs_epochs = 45,
   lr_decay = 0.999
 )
-
 ```
 
 
@@ -141,7 +154,6 @@ We arent interested in learning *specific* generalizedcovariances of the data, s
 **References:**
 
 
+**Podosinnikova, A.**, Perry, A., Wein, A. S., Bach, F., d’Aspremont, A., & Sontag, D. (2019, April). Overcomplete independent component analysis via SDP. In The 22nd international conference on artificial intelligence and statistics (pp. 2583-2592). PMLR.
 
-Podosinnikova, A., Perry, A., Wein, A. S., Bach, F., d’Aspremont, A., & Sontag, D. (2019, April). Overcomplete independent component analysis via SDP. In The 22nd international conference on artificial intelligence and statistics (pp. 2583-2592). PMLR.
-
-Ding, C., Gong, M., Zhang, K., & Tao, D. (2019). Likelihood-free overcomplete ICA and applications in causal discovery. Advances in neural information processing systems, 32.
+**Ding, C.**, Gong, M., Zhang, K., & Tao, D. (2019). Likelihood-free overcomplete ICA and applications in causal discovery. Advances in neural information processing systems, 32.
