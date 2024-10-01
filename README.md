@@ -65,10 +65,16 @@ $$
 Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, derived from the second-order cumulants.
 
 
+## Generalized covariances
+
+So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous wrok is that you can evaluate the cumulant generating functino at other values of t to get additional information on the distribution of the data.
+
+
+
 
 **References:**
 
-References:
+
 
 Podosinnikova, A., Perry, A., Wein, A. S., Bach, F., d’Aspremont, A., & Sontag, D. (2019, April). Overcomplete independent component analysis via SDP. In The 22nd international conference on artificial intelligence and statistics (pp. 2583-2592). PMLR.
 
