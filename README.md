@@ -15,7 +15,7 @@ this code estimates A by levraging the differences betweee the observed generali
 3. a single layer neural network applied to a gaussian variable can approximate the (moments of) the uncorrelated latent variables
 
 
-Unlike Podosinnikova et al. I use backpropagation to estimate the parameters. Based on ideas in Ging et al (2019) I define a generative neural network for each of the k latent variables (a multi-layer perceptron), and a matrix A that mixed these variables into p observed pseudo variables. I train the model to approzimate the the generalized covariacne matrices of the obersed data. Unlike Deng et al. I explicitly penalize the loss to ensure the latent variables remain uncorrelated.
+Unlike Podosinnikova et al. I use backpropagation to estimate the parameters. Based on ideas in Ding et al (2019) I define a generative neural network for each of the k latent variables (a multi-layer perceptron), and a matrix A that mixed these variables into p observed pseudo variables. I train the model to approzimate the the generalized covariacne matrices of the obersed data. Unlike Deng et al. I explicitly penalize the loss to ensure the latent variables remain uncorrelated.
 
 **the key gain over other overcomplete ICA techniques is** that we only use 2nd order statistics, no skewness and kurtosis related math needed! Which is great because higher order moments like skewness and kurtosis, or higher order cumulants usually means high dimensional matrices and slow opimization. 
 
