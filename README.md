@@ -20,7 +20,7 @@ Unlike Podosinnikova et al. I use backpropagation to estimate the parameters. Ba
 **Warning:**
 
 
-Inferences is aproximate! Hereis an example concordance between the true and estimated loadings for a rpoblem with 20 observed and 50 latent variables. I didnt try very hard to optimize the parameters of the model to squeeze out maximum concurdance, and it could have definately trained longer, but take rto heart that these loadings are estimates not mathematical properties of the data like svd/eigen values.
+Inferences is aproximate! Here is an example concordance between the true and estimated loadings for a problem with 20 observed and 50 latent variables. I in this case didn't try very hard to optimize the training and parameters of the model to squeeze out maximum concordance, so you might epxect hgher concordance, but take to heart that these loadings are estimates not mathematical properties of the data like svd/eigen values.
 
 ![image](https://github.com/user-attachments/assets/02578321-bed7-466a-bf6c-044642bd89af)
 
