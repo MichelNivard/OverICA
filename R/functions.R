@@ -290,7 +290,7 @@ overica <- function(
     )
 
     # Define learning rate scheduler for L-BFGS
-    scheduler_lbfgs <- lr_cosine_annealing(optimizer_lbfgs, lr_lambda = function(epoch) lr_decay)
+    scheduler_lbfgs <- lr_multiplicative(optimizer_lbfgs, lr_lambda = function(epoch) lr_decay)
 
     for (epoch in 1:lbfgs_epochs) {
       # For L-BFGS optimizer, define closure
