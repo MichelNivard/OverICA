@@ -49,9 +49,7 @@ The **covariance matrix** $\Sigma$ captures the pairwise linear relationships be
 
 2. **Second Derivatives (Covariances)**:
    
- $$
-\left.\frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|_{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}
-$$
+ $\left.\frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|_{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}$
 Thus, the covariance matrix is formed by the second-order partial derivatives of the CGF evaluated at zero:
 
 $$
