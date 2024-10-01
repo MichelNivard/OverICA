@@ -34,7 +34,8 @@ Before proceeding, ensure that you have the necessary dependencies installed. Yo
 install.packages(c("torch", "clue", "MASS", "devtools"))
 
 # Install OverICA package (replace 'path/to/package' with your actual path)
-# devtools::install_github("MichelNivard/OverICA")
+devtools::install_github("MichelNivard/OverICA")
+library(OverICA)
 ```
 
 ## Generic usage
