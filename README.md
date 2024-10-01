@@ -167,6 +167,20 @@ Mimimizing a function that is a sum of these terms (and any penalties):
 
 We arent interested in learning *specific* generalized covariances of the data, so for each itteration of the optimizer we sample fresh values t and evaluate the emperical and model implied generalized covriances. This ensures we dont accidentally overfit to a specific poorly estimated set of emperical generalized covariances of the data.
 
+1. Sample
+-   Sample new values $t$
+-   Compute the generalized covariances for the data at $t$
+4. Forward Pass (Prediction):
+-   Input Data: Feed the input data into the model.
+-   Compute Output: The model processes the input through its layers to produce an output (prediction) of the generalized covariances at $t$.
+4.  Loss Computation:
+-  Calculate Loss: Compute the difference between the predicted outputs and the actual outputs.
+5.  Backward Pass (Backpropagation):
+-  Compute Gradients: Calculate how much each parameter (weight and bias) contributes to the loss using calculus (derivatives).
+-  Gradient Descent: Use these gradients to determine the direction to adjust the parameters to minimize the loss.
+6.  Parameter Update:
+-  Adjust Parameters: Update the model's parameters slightly in the direction that reduces the loss.
+
 
 ## References:
 
