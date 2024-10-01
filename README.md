@@ -107,12 +107,18 @@ Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, de
 
 ## Generalized covariances
 
-So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous work is that you can evaluate the cumulant generating functino at other values of $t$ to get additional information on the distribution of the data. in `OverICA` we evaluate the emperical cumulant generating fucntion of the data at a number of points, and we train a model to generate data that matches the emperical data at these points, which means it has to learn the loadigns in matrix $A$.
+So we can define the covariances and emans in terms of the cumulant generating fuction (EGF) evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous work is that you can evaluate the cumulant generating functino at other values of $t$ to get additional information on the distribution of the data. These other evalautinos of the CGF can be viewed as generalizedcovariance mtrices:
+
+ $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|{\mathbf{t}!=0} = \text{GenCov}(X_i, X_j) = \Sigma_{ij}$ 
 
 
- $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|{\mathbf{t}=0} = \text{Cov}(X_i, X_j) = \Sigma_{ij}$ 
 
- for $t_i$ and t_j_ != 0. 
+
+
+in `OverICA` we evaluate the emperical cumulant generating fucntion of the data at a number of points, and we train a model to generate data that matches the emperical data at these points, which means it has to learn the loadigns in matrix $A$.
+
+
+
 
 
 ## Generative adverserial networks.
