@@ -1,6 +1,6 @@
 ## OverICA
 
-the R package `OverICA` estiamtes overcompelte indepedent components, meanign it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
+the R package `OverICA` estiamtes overcomplete indepedent components, meaning it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
 
 y = Ax
 
@@ -67,7 +67,9 @@ Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, de
 
 ## Generalized covariances
 
-So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous wrok is that you can evaluate the cumulant generating functino at other values of t to get additional information on the distribution of the data.
+So we can define the covariances and emans in terms of the cumulant generating fuction evaluated at t =0. But a key insight in **Podosinnikova et al.** and previous wrok is that you can evaluate the cumulant generating functino at other values of t to get additional information on the distribution of the data. 
+
+
 
 
 
