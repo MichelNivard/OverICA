@@ -1,5 +1,7 @@
 ## OverICA
 
+** EXPERIMENTAL!! **
+
 the R package `OverICA` estimates overcomplete indepedent components (ICA), meaning it estimates more altent variables then there are observed variables in the data. We observe p variabes in matrix y, we estimate the matrix A that contains the effects of k (non-gaussian) latent variables in x on the observed variables. there are potentially more variables k then p. 
 
 y = Ax
