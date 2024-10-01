@@ -116,7 +116,7 @@ A generative advrserial network is a neural network that "learns" to approximate
 
 ![image](https://github.com/user-attachments/assets/56be065f-bbd5-4877-9f71-ca0ba9633c56)
 
-We start with 1 sample of random normally distributed data vectors ($z$)  
+We start with 1 sample of random normally distributed data vectors ($z$)  and we train a neural entwork ( a multi layer perceptron) which is just an expensive workd for a very flxible non-linear transformation. which transforms $z_i$ into $s_i$.
 
 
 
