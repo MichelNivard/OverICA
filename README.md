@@ -129,7 +129,9 @@ These other evaluations of the CGF can be viewed as generalized covariance matri
 
  $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|{\mathbf{t}\neq 0} = \text{GenCov}(X_i, X_j) = \Sigma_{ij}$ 
 
-Similarly the generalized mean the the first derivative of the CGF evaluated at $t$. In `OverICA` we evaluate the emperical cumulant generating fucntion of the data at a number of points ($t$), and we train a model to generate data that matches the emperical data at these points. The model is structured linke an ICA model.
+Similarly the generalized mean the the first derivative of the CGF evaluated at $t$. 
+
+In `OverICA` we evaluate the emperical CGF of the data at a number of points ($t$), and we train a model to generate data that matches the emperical data at these points. The model is structured linke an ICA model.
 
 
 ## Generative adverserial networks
