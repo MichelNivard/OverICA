@@ -146,7 +146,7 @@ $$\hat{y} = As$$
 
 And the generalized covariances of the pseudo data $\hat{y}$ are matched to the true data $y$ trough optimisation in torch. 
 
-So the free parameters are:
+So in our moodel the free parameters are:
 
 1. a neural entwork for each latent variable
 2. the loadings matrix $$A
@@ -155,7 +155,7 @@ Under the following constraint:
 
 a.  $s$ are unorrelated
 
-Mimimizing afunctino that is a sum of:
+Mimimizing a function that is a sum of these terms (and any penalties):
 
 1. $$||GenCov(\hat{y}) - GenCov(y)||_2$$
 2. $$||GenMean(\hat{y}) - GenMean(y)||_2$$
