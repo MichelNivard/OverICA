@@ -145,10 +145,10 @@ We start with 1 sample of random normally distributed data vectors ($z$)  and we
 
 $$\hat{y} = As$$
 
-And the generalized covariances of the pseudo data $\hat{y}* are matched to the true data $y$ trough optimisation in torch. 
+And the generalized covariances of the pseudo data $\hat{y}$ are matched to the true data $y$ trough optimisation in torch. 
 
 ## Inferences details
-We arent interested in learning *specific* generalizedcovariances of the data, so for each itteratino fo the optimizer we ample fresh values t and evaluete the emperical and model implied generalized covriances. this ensures we dont accidentally overfit to a specific poorly estimated set of emperical generalized covariances. 
+We arent interested in learning *specific* generalizedcovariances of the data, so for each itteratino fo the optimizer we ample fresh values t and evaluate the emperical and model implied generalized covriances. this ensures we dont accidentally overfit to a specific poorly estimated set of emperical generalized covariances. 
 
 
 
