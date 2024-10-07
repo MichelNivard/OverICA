@@ -245,6 +245,7 @@ So in our moodel the free parameters are:
 Under the following constraint:
 
 a.  variables $s$ are unorrelated
+
 b.  optinally a sparsity constraint on $A$
 
 Mimimizing a function that is a sum of these terms (and any penalties):
