@@ -97,11 +97,13 @@ where $\mathbf{t} = (t_1, t_2, \ldots, t_p)^T$ is a vector of real numbers.
 
 ## Covariance Matrix from CGF
 
-The **covariance matrix** $\Sigma$ captures the pairwise linear relationships between components of $\mathbf{X}$ and is directly derived from the second-order cumulants of the CGF.
+The **covariance matrix** $\Sigma$ captures the pairwise linear relationships between components of $\mathbf{X}$ and is directly derived from the second-order cumulants of the CGF. to do so it makes sense to start froom the CGF of a single random variables. 
 
-The cumulant generating function ( K(t) ) of a random variable ( X ) is defined as:
+The cumulant generating function ( K(t) ) of a single random variable ( X ) is:
 
-$K(t) = \log \mathbb{E} \left[e^{tX}\right]$
+$$
+K(t) = \log \mathbb{E} \left[e^{tX}\right]
+$$
 
 where ( $\mathbb{E}$ ) denotes the expectation.
 
@@ -109,7 +111,9 @@ First Derivative of ( $K(t)$ )
 
 The first derivative of the CGF ( K(t) ) is:
 
-$K'(t) = \frac{d}{dt} K(t) = \frac{\mathbb{E} \left[X e^{tX}\right]}{\mathbb{E} \left[e^{tX}\right]} = \mathbb{E}_t[X]$
+$$
+K'(t) = \frac{d}{dt} K(t) = \frac{\mathbb{E} \left[X e^{tX}\right]}{\mathbb{E} \left[e^{tX}\right]} = \mathbb{E}_t[X]
+$$
 
 where ( $\mathbb{E}_t[X]$ ) denotes the expected value of ( X ) under the tilted distribution.
 
@@ -117,11 +121,15 @@ Second Derivative of ( K(t) )
 
 The second derivative of ( K(t) ) is:
 
-$K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2$
+$$
+K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2
+$$
 
 This is equivalent to the variance of ( X ) under the tilted distribution:
 
-$K''(t) = \text{Var}_t(X)$
+$$
+K''(t) = \text{Var}_t(X)
+$$
 
 ## Bivariate Cumulant Generating Function (CGF)
 
