@@ -27,7 +27,7 @@ Inferences is aproximate! Here is an example concordance between the true and es
 ![image](https://github.com/user-attachments/assets/02578321-bed7-466a-bf6c-044642bd89af)
 
 
-# installation
+# Installation
 
 Before proceeding, ensure that you have the necessary dependencies installed. You can install the `OverICA` package from your local directory or repository once it's built. Additionally, install the required packages if you haven't already:
 
