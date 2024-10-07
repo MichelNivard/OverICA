@@ -256,11 +256,20 @@ Second Derivatives of ( K(t_1, t_2) )
 
 The second-order partial derivatives of ( $K(t_1, t_2)$ ) provide information about the variances and covariance of (X) and (Y) under the tilted distribution:
 
-Variance of ( X ): $$  \frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X) $$
+Variance of ( X ): 
+$$  
+\frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X) 
+$$
 
-Variance of ( Y ): $$ \frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y) $$
+Variance of ( Y ): 
+$$ 
+\frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y) 
+$$
 
-Covariance between ( X ) and ( Y ): $$\frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)$$
+Covariance between ( X ) and ( Y ): 
+$$
+\frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)
+$$
 
 Thus, the second derivatives of the bivariate CGF ( $K(t_1, t_2)$ ) give the variance of (X), the variance of (Y), and their covariance. These quantities form the variance-covariance matrix of the tilted distribution:
 
@@ -283,15 +292,18 @@ Special Case: ( $t_1 = t_2 = 0$ )
 
 When ( $t_1 = t_2 = 0$ ), the derivatives provide information about the original distribution of ( X ) and ( Y ):
 
-$(\frac{\partial^2 K}{\partial t_1^2} \bigg|_{t_1=t_2=0} = \text{Var}(X))$
+$$
+\frac{\partial^2 K}{\partial t_1^2} \bigg|_{t_1=t_2=0} = \text{Var}(X)
+$$
 
-$(\frac{\partial^2 K}{\partial t_2^2} \bigg|_{t_1=t_2=0} = \text{Var}(Y))$
+$$
+\frac{\partial^2 K}{\partial t_2^2} \bigg|_{t_1=t_2=0} = \text{Var}(Y)
+$$
 
-$(\frac{\partial^2 K}{\partial t_1 \partial t_2} \bigg|_{t_1=t_2=0} = \text{Cov}(X, Y))$
+$$
+\frac{\partial^2 K}{\partial t_1 \partial t_2} \bigg|_{t_1=t_2=0} = \text{Cov}(X, Y)
+$$
 
-This matrix captures the dispersion and interdependence between ( X ) and ( Y ) in the joint distribution.
-
- 
 Thus, the covariance matrix is formed by the second-order partial derivatives of the CGF evaluated at zero:
 
 $$
