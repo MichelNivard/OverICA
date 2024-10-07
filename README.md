@@ -99,7 +99,7 @@ where $\mathbf{t} = (t_1, t_2, \ldots, t_p)^T$ is a vector of real numbers.
 
 The **covariance matrix** $\Sigma$ captures the pairwise linear relationships between components of $\mathbf{X}$ and is directly derived from the second-order cumulants of the CGF. to do so it makes sense to start froom the CGF of a single random variables. 
 
-The cumulant generating function ( K(t) ) of a single random variable ( X ) is:
+The cumulant generating function ( $K(t)$ ) of a single random variable ( $X$ ) is:
 
 $$
 K(t) = \log \mathbb{E} \left[e^{tX}\right]
@@ -107,9 +107,8 @@ $$
 
 where ( $\mathbb{E}$ ) denotes the expectation.
 
-First Derivative of ( $K(t)$ )
 
-The first derivative of the CGF ( K(t) ) is:
+The first derivative of the CGF ( $K(t)$ ) is:
 
 $$
 K'(t) = \frac{d}{dt} K(t) = \frac{\mathbb{E} \left[X e^{tX}\right]}{\mathbb{E} \left[e^{tX}\right]} = \mathbb{E}_t[X]
@@ -117,9 +116,8 @@ $$
 
 where ( $\mathbb{E}_t[X]$ ) denotes the expected value of ( X ) under the tilted distribution.
 
-Second Derivative of ( K(t) )
 
-The second derivative of ( K(t) ) is:
+The second derivative of ( $K(t)$ ) is:
 
 $$
 K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2
@@ -130,6 +128,9 @@ This is equivalent to the variance of ( X ) under the tilted distribution:
 $$
 K''(t) = \text{Var}_t(X)
 $$
+
+At the bottom of the page there is a full derivatino of the relation betwene the CGF ands the moments, which helped me greatly personally. 
+
 
 
 ## Bivariate Cumulant Generating Function (CGF)
@@ -210,7 +211,7 @@ Each element $\Sigma_{ij}$ represents the covariance between $X_i$ and $X_j$, de
 
 ## Generalized covariances & means
 
-So we can define the covariances and means in terms of the cumulant generating fuction (EGF) evaluated at $t = 0$. But a key insight in **Podosinnikova et al.** and previous work is that you can evaluate the cumulant generating function at other values of $t$ ($t \neq 0$) to get additional information on the distribution of the data. 
+So we can define the covariances and means in terms of the cumulant generating fuction (EGF) evaluated at $t = 0$. But a key insight in **Podosinnikova et al.** and previous work, and alluded to above, is that you can evaluate the cumulant generating function at other values of $t$ ($t \neq 0$) to get additional information on the distribution of the data. Evaluating the derivatives at other values gets you moments of tilted versions of the original distribution, which do in fact depende on the shaope of the distributino of the data.
 
 These other evaluations of the CGF can be viewed as generalized covariance matrices:
 
@@ -218,7 +219,7 @@ These other evaluations of the CGF can be viewed as generalized covariance matri
 
 Similarly the generalized mean the the first derivative of the CGF evaluated at $t$. 
 
-In `OverICA` we evaluate the emperical CGF of the data at a number of points ($t$), and we train a model to generate data that matches the emperical data at these points. The model is structured linke an ICA model.
+In `OverICA` we evaluate the emperical CGF of the data at a number of points ($t$), and we train a model to generate data that matches the emperical data at in terms of generalized covariances. The model is structured like an ICA model.
 
 
 ## Generative adverserial networks
