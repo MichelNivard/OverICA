@@ -99,8 +99,6 @@ where $\mathbf{t} = (t_1, t_2, \ldots, t_p)^T$ is a vector of real numbers.
 
 The **covariance matrix** $\Sigma$ captures the pairwise linear relationships between components of $\mathbf{X}$ and is directly derived from the second-order cumulants of the CGF.
 
-Cumulant Generating Function (CGF)
-
 The cumulant generating function ( K(t) ) of a random variable ( X ) is defined as:
 
 $K(t) = \log \mathbb{E} \left[e^{tX}\right]$
