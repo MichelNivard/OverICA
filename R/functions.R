@@ -6,6 +6,7 @@
 #' @param D_true A numeric matrix of true components (n x k).
 #' @return A numeric matrix with columns of \code{D_est} aligned to \code{D_true}.
 #' @importFrom clue solve_LSAP
+#' @export
 #' @examples
 #' # Assuming D_est and D_true are matrices
 #' D_aligned <- align_columns(D_est, D_true)
@@ -38,6 +39,7 @@ align_columns <- function(D_est, D_true) {
 #' @param t_vector A torch tensor representing the t-vector (p-dimensional).
 #' @param data_tensor A torch tensor representing the data (n x p).
 #' @return A list containing \code{K} (scalar), \code{dK} (first derivative), and \code{d2K} (second derivative).
+#' @export
 torch_ecgf <- function(t_vector, data_tensor) {
   # Compute the dot product between data and t_vector
   dot_product <- data_tensor$matmul(t_vector)
@@ -87,6 +89,7 @@ torch_ecgf <- function(t_vector, data_tensor) {
 #' @param lr_decay A numeric value specifying the decay rate for the multiplicative learning rate decay; set to 1 for no decay (default is 0.999).
 #' @return A list containing the estimated A matrix (\code{A_est}) and covariance matrix (\code{cov}).
 #' @import torch
+#' @export
 #' @examples
 #' # Assuming 'data' is a matrix of observed data
 #' result <- estimate_parameters(data, k = 5)
@@ -328,6 +331,7 @@ overica <- function(
 #' @param n An integer specifying the number of observations to generate.
 #' @param type A character string specifying the type of non-Gaussian distribution. One of "skew_positive", "skew_negative", or "kurtotic".
 #' @return A numeric vector of length \code{n} with non-Gaussian random variables.
+#' @export
 #' @examples
 #' x <- generate_non_gaussian(1000, type = "skew_positive")
 generate_non_gaussian <- function(n, type = c("skew_positive", "skew_negative", "kurtotic")) {
