@@ -352,6 +352,7 @@ generate_non_gaussian <- function(n, type = c("skew_positive", "skew_negative", 
 #' @param n An integer specifying the number of observations (rows).
 #' @param k An integer specifying the number of variables (columns).
 #' @return A numeric matrix of size \code{n x k} with non-Gaussian variables.
+#' @export
 #' @examples
 #' z <- generate_matrix(1000, 5)
 generate_matrix <- function(n, k) {
