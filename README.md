@@ -178,21 +178,6 @@ $$
 
 Thus, the second derivatives of the bivariate CGF ( $K(t_1, t_2)$ ) give the variance of (X), the variance of (Y), and their covariance. These quantities form the variance-covariance matrix of the tilted distribution:
 
-$$
-\begin{pmatrix}
-\frac{\partial^2 K}{\partial t_1^2} & \frac{\partial^2 K}{\partial t_1 \partial t_2} \\
-\frac{\partial^2 K}{\partial t_1 \partial t_2} & \frac{\partial^2 K}{\partial t_2^2}
-\end{pmatrix}
-
-=
-
-\begin{pmatrix}
-\text{Var}_{t_1, t_2}(X) & \text{Cov}_{t_1, t_2}(X, Y) \\
-\text{Cov}_{t_1, t_2}(X, Y) & \text{Var}_{t_1, t_2}(Y)
-\end{pmatrix}
-
-$$
-
 Special Case: ( $t_1 = t_2 = 0$ )
 
 When ( $t_1 = t_2 = 0$ ), the derivatives provide information about the original distribution of ( X ) and ( Y ):
