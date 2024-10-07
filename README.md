@@ -131,13 +131,114 @@ $$
 K''(t) = \text{Var}_t(X)
 $$
 
+## A fuller stept by step derivation (which helped me greatly!)
+
+let's go through the derivation step by step to understand how we get to the second derivative of the cumulant generating function $ K''(t) $. We want to show:
+
+$$
+K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2
+$$
+
+### Step 1: Definition of the CGF
+The cumulant generating function $K(t)$ of a random variable $X$ is defined as:
+
+$$
+K(t) = \log \mathbb{E} \left[ e^{tX} \right]
+$$
+
+where $\mathbb{E} \left[ e^{tX} \right]$ is the moment generating function (MGF).
+
+### Step 2: Differentiate $ K(t) $ to find $ K'(t) 
+To find $K'(t)$, take the derivative of $K(t)$ with respect to $t$:
+
+$$
+K'(t) = \frac{d}{dt} \log \mathbb{E} \left[ e^{tX} \right]
+$$
+
+Using the chain rule, we get:
+
+$$
+K'(t) = \frac{1}{\mathbb{E} \left[ e^{tX} \right]} \cdot \frac{d}{dt} \mathbb{E} \left[ e^{tX} \right]
+$$
+
+### Step 3: Differentiate the MGF
+Now, differentiate $\mathbb{E} \left[ e^{tX} \right]$ with respect to $t$:
+
+$$
+\frac{d}{dt} \mathbb{E} \left[ e^{tX} \right] = \mathbb{E} \left[ \frac{d}{dt} e^{tX} \right]
+$$
+
+Since $\frac{d}{dt} e^{tX} = X e^{tX}$, we get:
+
+$$
+\frac{d}{dt} \mathbb{E} \left[ e^{tX} \right] = \mathbb{E} \left[ X e^{tX} \right]
+$$
+
+### Step 4: Substitute back into $ K'(t) $
+Substitute the derivative back into the expression for $ K'(t) $:
+
+$$
+K'(t) = \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]}
+$$
+
+This is the expected value of $ X $ under the tilted distribution defined by $ e^{tX} $:
+
+$$
+K'(t) = \mathbb{E}_t[X]
+$$
+
+### Step 5: Find the second derivative $ K''(t) $
+Now, differentiate $ K'(t) $ to find $ K''(t) $:
+
+$$
+K''(t) = \frac{d}{dt} \mathbb{E}_t[X]
+$$
+
+### Step 6: Apply the quotient rule
+Use the definition of $ \mathbb{E}_t[X] = \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]} $ to differentiate it using the quotient rule:
+
+$$
+\frac{d}{dt} \mathbb{E}_t[X] = \frac{\mathbb{E} \left[ X^2 e^{tX} \right] \cdot \mathbb{E} \left[ e^{tX} \right] - \mathbb{E} \left[ X e^{tX} \right]^2}{\left( \mathbb{E} \left[ e^{tX} \right] \right)^2}
+$$
+
+### Step 7: Simplify the expression
+This can be rewritten as:
+
+$$
+K''(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2
+$$
+
+This is because:
+
+$$
+\mathbb{E}_t[X^2] = \frac{\mathbb{E} \left[ X^2 e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]}
+$$
+
+and
+$$
+
+(\mathbb{E}_t[X])^2 = \left( \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]} \right)^2
+$$
+
+### Step 8: Interpretation of $K''(t)$
+The expression $K''(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2 $ represents the **variance** of $X$ under the tilted distribution defined by $e^{tX}$:
+
+$$
+K''(t) = \text{Var}_t(X)
+$$
+
+Thus, the second derivative of the cumulant generating function $K(t)$ with respect to $t$ gives the variance of $X$ under the tilted distribution.
+
+
 ## Bivariate Cumulant Generating Function (CGF)
 
 The cumulant generating function (CGF) for a pair of random variables (X) and (Y) is an extension of the univariate case. It encapsulates information about the joint moments of (X) and (Y). Here's a breakdown of the bivariate CGF and its derivatives:
 
 For two random variables (X) and (Y), the bivariate cumulant generating function ( $K(t_1, t_2)$ ) is defined as:
 
-$K(t_1, t_2) = \log \mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]$
+$$
+K(t_1, t_2) = \log \mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]
+$$
 
 where: - ( $t_1$ ) and ( $t_2$ ) are real parameters. - ( $\mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]$ ) is the joint moment generating function (MGF) of (X) and (Y).
 
@@ -145,7 +246,9 @@ First Derivatives of ($K(t_1, t_2)$ )
 
 The partial derivatives of ( $K(t_1, t_2)$ ) give the means of (X) and (Y) under the tilted distribution:
 
-$\frac{\partial K}{\partial t_1} = \mathbb{E}{t_1, t_2}[X] \quad \text{and} \quad \frac{\partial K}{\partial t_2} = \mathbb{E}{t_1, t_2}[Y]$
+$$
+\frac{\partial K}{\partial t_1} = \mathbb{E}{t_1, t_2}[X] \quad \text{and} \quad \frac{\partial K}{\partial t_2} = \mathbb{E}{t_1, t_2}[Y]
+$$
 
 where ( $\mathbb{E}_{t_1, t_2}[\cdot]$ ) indicates the expectation under the distribution tilted by ( $e^{t_1 X + t_2 Y}$ ).
 
@@ -153,11 +256,11 @@ Second Derivatives of ( K(t_1, t_2) )
 
 The second-order partial derivatives of ( $K(t_1, t_2)$ ) provide information about the variances and covariance of (X) and (Y) under the tilted distribution:
 
-Variance of ( X ): $\frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X)$
+Variance of ( X ): $$  \frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X) $$
 
-Variance of ( Y ): $\frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y)$
+Variance of ( Y ): $$ \frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y) $$
 
-Covariance between ( X ) and ( Y ): $\frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)$
+Covariance between ( X ) and ( Y ): $$\frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)$$
 
 Thus, the second derivatives of the bivariate CGF ( $K(t_1, t_2)$ ) give the variance of (X), the variance of (Y), and their covariance. These quantities form the variance-covariance matrix of the tilted distribution:
 
