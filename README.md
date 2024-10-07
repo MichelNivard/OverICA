@@ -252,16 +252,18 @@ $$
 
 where ( $\mathbb{E}_{t_1, t_2}[\cdot]$ ) indicates the expectation under the distribution tilted by ( $e^{t_1 X + t_2 Y}$ ).
 
-Second Derivatives of ( K(t_1, t_2) )
+Second Derivatives of ( $K(t_1, t_2)$ )
 
 The second-order partial derivatives of ( $K(t_1, t_2)$ ) provide information about the variances and covariance of (X) and (Y) under the tilted distribution:
 
 Variance of ( X ): 
+
 $$  
 \frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X) 
 $$
 
 Variance of ( Y ): 
+
 $$ 
 \frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y) 
 $$
