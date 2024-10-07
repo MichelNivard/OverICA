@@ -195,7 +195,7 @@ K''(t) = \frac{d}{dt} \mathbb{E}_t[X]
 $$
 
 ### Step 6: Apply the quotient rule
-Use the definition of $ \mathbb{E}_t[X] = \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]} $ to differentiate it using the quotient rule:
+Use the definition of $\mathbb{E}_t[X] = \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]}$ to differentiate it using the quotient rule:
 
 $$
 \frac{d}{dt} \mathbb{E}_t[X] = \frac{\mathbb{E} \left[ X^2 e^{tX} \right] \cdot \mathbb{E} \left[ e^{tX} \right] - \mathbb{E} \left[ X e^{tX} \right]^2}{\left( \mathbb{E} \left[ e^{tX} \right] \right)^2}
@@ -215,8 +215,8 @@ $$
 $$
 
 and
-$$
 
+$$
 (\mathbb{E}_t[X])^2 = \left( \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]} \right)^2
 $$
 
