@@ -181,7 +181,7 @@ $$
 K'(t) = \frac{\mathbb{E} \left[ X e^{tX} \right]}{\mathbb{E} \left[ e^{tX} \right]}
 $$
 
-This is the expected value of $ X $ under the tilted distribution defined by $ e^{tX} $:
+This is the expected value of $X$ under the tilted distribution defined by $e^{tX}$:
 
 $$
 K'(t) = \mathbb{E}_t[X]
