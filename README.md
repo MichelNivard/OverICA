@@ -132,8 +132,6 @@ K''(t) = \text{Var}_t(X)
 $$
 
 
-
-
 ## Bivariate Cumulant Generating Function (CGF)
 
 The cumulant generating function (CGF) for a pair of random variables (X) and (Y) is an extension of the univariate case. It encapsulates information about the joint moments of (X) and (Y). Here's a breakdown of the bivariate CGF and its derivatives:
