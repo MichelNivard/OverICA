@@ -103,7 +103,7 @@ Cumulant Generating Function (CGF)
 
 The cumulant generating function ( K(t) ) of a random variable ( X ) is defined as:
 
-$ K(t) = \log \mathbb{E} \left[e^{tX}\right] $
+$K(t) = \log \mathbb{E} \left[e^{tX}\right]$
 
 where ( $\mathbb{E}$ ) denotes the expectation.
 
@@ -111,7 +111,7 @@ First Derivative of ( $K(t)$ )
 
 The first derivative of the CGF ( K(t) ) is:
 
-$ K'(t) = \frac{d}{dt} K(t) = \frac{\mathbb{E} \left[X e^{tX}\right]}{\mathbb{E} \left[e^{tX}\right]} = \mathbb{E}_t[X] $
+$K'(t) = \frac{d}{dt} K(t) = \frac{\mathbb{E} \left[X e^{tX}\right]}{\mathbb{E} \left[e^{tX}\right]} = \mathbb{E}_t[X]$
 
 where ( $\mathbb{E}_t[X]$ ) denotes the expected value of ( X ) under the tilted distribution.
 
@@ -119,19 +119,19 @@ Second Derivative of ( K(t) )
 
 The second derivative of ( K(t) ) is:
 
-$ K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2 $
+$K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2$
 
 This is equivalent to the variance of ( X ) under the tilted distribution:
 
-$ K''(t) = \text{Var}_t(X) $
+$K''(t) = \text{Var}_t(X)$
 
 ## Bivariate Cumulant Generating Function (CGF)
 
 The cumulant generating function (CGF) for a pair of random variables (X) and (Y) is an extension of the univariate case. It encapsulates information about the joint moments of (X) and (Y). Here's a breakdown of the bivariate CGF and its derivatives:
 
-For two random variables (X) and (Y), the bivariate cumulant generating function ( K(t_1, t_2) ) is defined as:
+For two random variables (X) and (Y), the bivariate cumulant generating function ( $K(t_1, t_2)$ ) is defined as:
 
-$ K(t_1, t_2) = \log \mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]$
+$K(t_1, t_2) = \log \mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]$
 
 where: - ( $t_1$ ) and ( $t_2$ ) are real parameters. - ( $\mathbb{E} \left[ e^{t_1 X + t_2 Y} \right]$ ) is the joint moment generating function (MGF) of (X) and (Y).
 
@@ -139,7 +139,7 @@ First Derivatives of ($K(t_1, t_2)$ )
 
 The partial derivatives of ( $K(t_1, t_2)$ ) give the means of (X) and (Y) under the tilted distribution:
 
-$ \frac{\partial K}{\partial t_1} = \mathbb{E}{t_1, t_2}[X] \quad \text{and} \quad \frac{\partial K}{\partial t_2} = \mathbb{E}{t_1, t_2}[Y] $
+$\frac{\partial K}{\partial t_1} = \mathbb{E}{t_1, t_2}[X] \quad \text{and} \quad \frac{\partial K}{\partial t_2} = \mathbb{E}{t_1, t_2}[Y]$
 
 where ( $\mathbb{E}_{t_1, t_2}[\cdot]$ ) indicates the expectation under the distribution tilted by ( $e^{t_1 X + t_2 Y}$ ).
 
@@ -147,9 +147,9 @@ Second Derivatives of ( K(t_1, t_2) )
 
 The second-order partial derivatives of ( $K(t_1, t_2)$ ) provide information about the variances and covariance of (X) and (Y) under the tilted distribution:
 
-Variance of ( X ): $ \frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X) $
+Variance of ( X ): $\frac{\partial^2 K}{\partial t_1^2} = \mathbb{E}{t_1, t_2}[X^2] - (\mathbb{E}{t_1, t_2}[X])^2 = \text{Var}_{t_1, t_2}(X)$
 
-Variance of ( Y ): $ \frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y) $
+Variance of ( Y ): $\frac{\partial^2 K}{\partial t_2^2} = \mathbb{E}{t_1, t_2}[Y^2] - (\mathbb{E}{t_1, t_2}[Y])^2 = \text{Var}_{t_1, t_2}(Y)$
 
 Covariance between ( X ) and ( Y ): $\frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)$
 
