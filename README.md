@@ -103,7 +103,7 @@ Cumulant Generating Function (CGF)
 
 The cumulant generating function ( K(t) ) of a random variable ( X ) is defined as:
 
-$ K(t) = \log \mathbb{E} \left[e^{tX}\right]$
+$ K(t) = \log \mathbb{E} \left[e^{tX}\right] $
 
 where ( $\mathbb{E}$ ) denotes the expectation.
 
