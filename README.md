@@ -129,7 +129,10 @@ $$
 K''(t) = \text{Var}_t(X)
 $$
 
-At the bottom of the page there is a full derivatino of the relation betwene the CGF ands the moments, which helped me greatly personally. 
+there is the special case $t = 0$ where $\text{Var}_t(X) = \text{Var}\_(X)$
+
+
+At the bottom of the page there is a full derivation of the relation betwene the CGF and the moments, which helped me greatly personally. 
 
 
 
