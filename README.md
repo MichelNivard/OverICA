@@ -129,7 +129,7 @@ So we can define the covariances and means in terms of the cumulant generating f
 
 These other evaluations of the CGF can be viewed as generalized covariance matrices:
 
- $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|{\mathbf{t}\neq 0} = \text{GenCov}(X_i, X_j) = \Sigma(t)_{ij}$ 
+ $\left. \frac{\partial^2 K_{\mathbf{X}}(\mathbf{t})}{\partial t_i \partial t_j}\right|\_{\mathbf{t}\neq 0} = \text{GenCov}(X_i, X_j) = \Sigma(t)_{ij}$ 
 
 Similarly the generalized mean the the first derivative of the CGF evaluated at $t$. 
 
