@@ -133,7 +133,7 @@ $$
 
 ## A fuller stept by step derivation (which helped me greatly!)
 
-let's go through the derivation step by step to understand how we get to the second derivative of the cumulant generating function $ K''(t) $. We want to show:
+let's go through the derivation step by step to understand how we get to the second derivative of the cumulant generating function $K''(t)$. We want to show:
 
 $$
 K''(t) = \frac{d^2}{dt^2} K(t) = \mathbb{E}_t[X^2] - (\mathbb{E}_t[X])^2
