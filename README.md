@@ -176,9 +176,9 @@ $$
 \frac{\partial^2 K}{\partial t_1 \partial t_2} = \mathbb{E}{t_1, t_2}[XY] - \mathbb{E}{t_1, t_2}[X] \mathbb{E}{t_1, t_2}[Y] = \text{Cov}{t_1, t_2}(X, Y)
 $$
 
-Thus, the second derivatives of the bivariate CGF ( $K(t_1, t_2)$ ) give the variance of (X), the variance of (Y), and their covariance. These quantities form the variance-covariance matrix of the tilted distribution:
+Thus, the second derivatives of the bivariate CGF ( $K(t_1, t_2)$ ) give the variance of (X), the variance of (Y), and their covariance. These quantities form the variance-covariance matrix of the tilted distribution.
 
-Special Case: ( $t_1 = t_2 = 0$ )
+## Special Case: ( $t_1 = t_2 = 0$ )
 
 When ( $t_1 = t_2 = 0$ ), the derivatives provide information about the original distribution of ( X ) and ( Y ):
 
