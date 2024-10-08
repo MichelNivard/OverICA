@@ -73,10 +73,10 @@ torch_ecgf <- function(t_vector, data_tensor) {
 #'
 #' @param data A numeric matrix representing the observed data (n x p).
 #' @param k An integer specifying the number of latent variables.
-#' @param num_t_vals An integer specifying the number of t-values to use (default is 7).
+#' @param num_t_vals An integer specifying the number of t-values to use (default is 8).
 #' @param lambda A numeric value for the L1 regularization parameter (default is 0.01).
 #' @param sigma A numeric value for the covariance penalty parameter (default is 0.01).
-#' @param tbound A numeric value specifying the bound for t-values (default is 0.4).
+#' @param tbound A numeric value specifying the standard deviation for t-values (default is 0.2).
 #' @param n_batch An integer specifying the batch size for the neural network (default is 1024).
 #' @param hidden_size An integer specifying the hidden size of the neural network (default is 10).
 #' @param use_adam Logical; whether to use the Adam optimizer first (default is TRUE).
@@ -96,10 +96,10 @@ torch_ecgf <- function(t_vector, data_tensor) {
 overica <- function(
     data,
     k,
-    num_t_vals = 7,
+    num_t_vals = 8,
     lambda = 0.01,
     sigma=0.01,
-    tbound = .4,
+    tbound = .2,
     n_batch = 1024,
     hidden_size = 10,
     use_adam = TRUE,       # Whether to use Adam optimizer first
@@ -142,12 +142,7 @@ overica <- function(
       s_list <- list()
       for (i in 1:k) {
         z_i <- z[, i, drop = FALSE]
-        s_i <- self$nets[[i]](z_i)
-        # Centering and scaling
-        s_mean <- s_i$mean()
-        s_std <- s_i$std()
-        s_scaled <- (s_i - s_mean) / s_std
-        s_list[[i]] <- s_scaled
+        s_list[[i]] <- self$nets[[i]](z_i)
       }
       s <- torch_cat(s_list, dim = 2)
       return(s)
@@ -206,7 +201,7 @@ overica <- function(
     # The first t-value is a zero vector
     t_vals_o <- matrix(0, nrow = 1, ncol = p)
     # Additional random t-values
-    additional_t_vals <- matrix(runif((num_t_vals - 1) * p, min = -tbound, max = tbound), ncol = p)
+    additional_t_vals <- matrix(rnorm((num_t_vals - 1) * p,0, tbound), ncol = p)
     t_vals_o <- rbind(t_vals_o, additional_t_vals)
     t_vals_o_tensor <- torch_tensor(t_vals_o, dtype = torch_float(), device = device)
 

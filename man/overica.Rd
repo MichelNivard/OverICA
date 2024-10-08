@@ -7,10 +7,10 @@
 overica(
   data,
   k,
-  num_t_vals = 7,
+  num_t_vals = 8,
   lambda = 0.01,
   sigma = 0.01,
-  tbound = 0.4,
+  tbound = 0.2,
   n_batch = 1024,
   hidden_size = 10,
   use_adam = TRUE,
@@ -28,13 +28,13 @@ overica(
 
 \item{k}{An integer specifying the number of latent variables.}
 
-\item{num_t_vals}{An integer specifying the number of t-values to use (default is 7).}
+\item{num_t_vals}{An integer specifying the number of t-values to use (default is 8).}
 
 \item{lambda}{A numeric value for the L1 regularization parameter (default is 0.01).}
 
 \item{sigma}{A numeric value for the covariance penalty parameter (default is 0.01).}
 
-\item{tbound}{A numeric value specifying the bound for t-values (default is 0.4).}
+\item{tbound}{A numeric value specifying the standard deviation for t-values (default is 0.2).}
 
 \item{n_batch}{An integer specifying the batch size for the neural network (default is 1024).}
 
