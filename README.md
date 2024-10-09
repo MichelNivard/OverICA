@@ -27,7 +27,7 @@ Good run             |  Bad run
 :-------------------------:|:-------------------------:
 ![image](https://github.com/user-attachments/assets/f69e2e96-9bf2-4caa-b3cf-2b70ae8835dc) | ![image](https://github.com/user-attachments/assets/2fa8603d-9b61-41ed-a0e3-71bf3cf81248)
 
-
+In this case the better soliutino had a lower loss, but this isnt always the case as the loss can depend on thye speciific set of t-values that was sampled. In an emperical application you'd never know which is closter to the truth and without further exploration it would be hard to favor one over the other. It's essetial to try a whole host of optimizer settings to figure out which gives you lowwer loss. Once you are satisfied with the optimizer settings you can try a few indepdenent runs and compare results. Work on tools to either aggregate multiple runs to retain stable components, and/or tools to compare across runs on valitation data or on unseen validation t-values is ongoing. 
 
 
 # Installation
