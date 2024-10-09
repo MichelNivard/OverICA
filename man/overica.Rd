@@ -11,8 +11,11 @@ overica(
   lambda = 0.01,
   sigma = 0.01,
   tbound = 0.2,
+  abound = 0.5,
   n_batch = 1024,
   hidden_size = 10,
+  neural_nets = NULL,
+  clip_grad = TRUE,
   use_adam = TRUE,
   adam_epochs = 100,
   adam_lr = 0.01,
@@ -36,9 +39,15 @@ overica(
 
 \item{tbound}{A numeric value specifying the standard deviation for t-values (default is 0.2).}
 
+\item{abound}{A numeric values that specifies the upper and lower bound of the uniformly sampled starting values for A (default is 0.5)}
+
 \item{n_batch}{An integer specifying the batch size for the neural network (default is 1024).}
 
 \item{hidden_size}{An integer specifying the hidden size of the neural network (default is 10).}
+
+\item{neural_nets}{User specified, or previously fitted neural nets, if left at NULL the model will spin up new untrained neural networks.}
+
+\item{clip_grad}{Should the gradient be clipped during optimization?}
 
 \item{use_adam}{Logical; whether to use the Adam optimizer first (default is TRUE).}
 
@@ -57,7 +66,7 @@ overica(
 \item{lr_decay}{A numeric value specifying the decay rate for the multiplicative learning rate decay; set to 1 for no decay (default is 0.999).}
 }
 \value{
-A list containing the estimated A matrix (\code{A_est}) and covariance matrix (\code{cov}).
+A list containing the estimated A matrix (\code{A_est}), covariance matrix (\code{cov}), the neural nets (\code{neural_nets}) and the loss history.
 }
 \description{
 This function estimates parameters of an OICA model using torch tensors and ECGFs. It optimizes the parameters using a combination of Adam and L-BFGS optimizers.
