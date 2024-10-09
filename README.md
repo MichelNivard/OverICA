@@ -22,9 +22,12 @@ Unlike Podosinnikova et al. I use backpropagation to estimate the parameters. Ba
 **Warning:**
 
 
-Inferences is aproximate! Here is an example concordance between the true and estimated loadings for a problem with 20 observed and 50 latent variables. I in this case didn't try very hard to optimize the training and parameters of the model to squeeze out maximum concordance, so you might epxect hgher concordance, but take to heart that these loadings are estimates not mathematical properties of the data like svd/eigen values.
+Inferences is aproximate! Here is an example of two runs estimating  8 latent variables given 5 observed variables, same data goes into the model twice. Simply because we sample a random matrix of 96*5 points at which to evaluate the model ("t-values" see below) and the t-values in one of these runs were likely less the ideal points of the multiviate density to evalue the modle one run neatly recapitulates the ground truth, the other is noisier. 
+Good run             |  Bad run
+:-------------------------:|:-------------------------:
+![image](https://github.com/user-attachments/assets/f69e2e96-9bf2-4caa-b3cf-2b70ae8835dc) | ![image](https://github.com/user-attachments/assets/2fa8603d-9b61-41ed-a0e3-71bf3cf81248)
 
-![image](https://github.com/user-attachments/assets/02578321-bed7-466a-bf6c-044642bd89af)
+
 
 
 # Installation
