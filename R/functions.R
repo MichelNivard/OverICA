@@ -32,40 +32,90 @@ align_columns <- function(D_est, D_true) {
   return(D_est_aligned)
 }
 
-#' Compute the Empirical Cumulant Generating Function (ECGF) Using Torch
+#' Compute Empirical Cumulative Generating Function (ECGF) and its Derivatives
 #'
-#' This internal function computes the ECGF and its first and second derivatives using torch tensors.
+#' This function calculates the Empirical Cumulative Generating Function (ECGF) and its first
+#' and second derivatives using a batch of data. It is designed to work with torch tensors.
 #'
-#' @param t_vector A torch tensor representing the t-vector (p-dimensional).
-#' @param data_tensor A torch tensor representing the data (n x p).
-#' @return A list containing \code{K} (scalar), \code{dK} (first derivative), and \code{d2K} (second derivative).
+#' @param t_vectors A tensor of shape \code{(num_t_vals, p)}, where \code{num_t_vals} is the number of t-values and \code{p} is the dimensionality.
+#' @param data_tensor A tensor of shape \code{(n, p)}, where \code{n} is the number of data points and \code{p} is the dimensionality.
+#'
+#' @return A list containing:
+#' \item{K}{A tensor of shape \code{(num_t_vals)} representing the ECGF values.}
+#' \item{dK}{A tensor of shape \code{(num_t_vals, p)} representing the first derivative of the ECGF.}
+#' \item{d2K}{A tensor of shape \code{(num_t_vals, p, p)} representing the second derivative of the ECGF.}
+#'
+#' @details
+#' The function computes the ECGF using the dot product between the data tensor and t-vectors, followed by the calculation of log-sum-exp for numerical stability.
+#' The first derivative \code{dK} is obtained using weighted averages of the data points. The second derivative \code{d2K} is computed through a batch of weighted centered data products.
+#'
+#' @examples
+#' \dontrun{
+#' # Assume torch and appropriate tensors are loaded
+#' t_vectors <- torch_randn(c(5, 3)) # 5 t-values, 3-dimensional space
+#' data_tensor <- torch_randn(c(100, 3)) # 100 data points, 3-dimensional space
+#' result <- torch_ecgf_batch(t_vectors, data_tensor)
+#' print(result$K)  # ECGF values
+#' print(result$dK) # First derivative
+#' print(result$d2K) # Second derivative
+#' }
+#'
 #' @export
-torch_ecgf <- function(t_vector, data_tensor) {
-  # Compute the dot product between data and t_vector
-  dot_product <- data_tensor$matmul(t_vector)
+torch_ecgf_batch <- function(t_vectors, data_tensor) {
+  # t_vectors: (num_t_vals x p)
+  # data_tensor: (n x p)
 
-  # Subtract max for numerical stability
-  max_dot <- torch_max(dot_product)
-  dot_product <- dot_product - max_dot
+  num_t_vals <- t_vectors$size(1)
+  n <- data_tensor$size(1)
+  p <- data_tensor$size(2)
 
-  # Compute the exponential of the dot product
-  exp_dot <- torch_exp(dot_product)
+  # Compute the dot product between data and t_vectors
+  dot_product <- data_tensor$matmul(t_vectors$transpose(1, 2))  # (n x num_t_vals)
 
-  # Compute K(t) = log(mean(exp(dot_product))) + max_dot
-  K_t <- torch_log(torch_mean(exp_dot)) + max_dot
+  # Compute K_t
+  K_t <- torch_logsumexp(dot_product, dim = 1) - log(n)  # (num_t_vals)
 
-  # Compute weights for the weighted mean
-  weights <- exp_dot / torch_sum(exp_dot)
+  # Compute log weights for numerical stability
+  log_weights <- dot_product - torch_logsumexp(dot_product, dim = 1, keepdim = TRUE)  # (n x num_t_vals)
+  weights <- torch_exp(log_weights)  # (n x num_t_vals)
 
-  # Compute the first derivative dK = E[data * weights]
-  dK <- torch_sum(data_tensor * weights$unsqueeze(2), dim = 1)
+  # Compute first derivative dK
+  # Expand weights to (n x num_t_vals x 1)
+  weights_expanded <- weights$unsqueeze(3)  # (n x num_t_vals x 1)
 
-  # Compute the second derivative d2K
-  data_centered <- data_tensor - dK
-  d2K <- (weights$unsqueeze(2) * data_centered)$t()$matmul(data_centered)
+  # Expand data_tensor to (n x 1 x p)
+  data_expanded <- data_tensor$unsqueeze(2)  # (n x 1 x p)
 
-  return(list(K = K_t, dK = dK, d2K = d2K))
+  # Multiply and sum over n
+  data_weighted <- weights_expanded * data_expanded  # (n x num_t_vals x p)
+
+  # Sum over n
+  dK <- torch_sum(data_weighted, dim = 1)  # (num_t_vals x p)
+
+  # Compute second derivative d2K
+  # Expand dK to (1 x num_t_vals x p)
+  dK_expanded <- dK$unsqueeze(1)  # (1 x num_t_vals x p)
+
+  data_centered <- data_expanded - dK_expanded  # (n x num_t_vals x p)
+
+  # Compute weighted_data_centered
+  weighted_data_centered <- weights_expanded * data_centered  # (n x num_t_vals x p)
+
+  # Compute d2K using batched matrix multiplication
+  # Permute dimensions to (num_t_vals x n x p)
+  data_centered_per_t <- data_centered$permute(c(2, 1, 3))  # (num_t_vals x n x p)
+  weighted_data_centered_per_t <- weighted_data_centered$permute(c(2, 1, 3))  # (num_t_vals x n x p)
+
+  # Transpose weighted_data_centered_per_t to (num_t_vals x p x n)
+  weighted_centered_transposed <- weighted_data_centered_per_t$transpose(2, 3)  # (num_t_vals x p x n)
+
+  # Compute d2K_batch using torch_bmm
+  d2K_batch <- torch_bmm(weighted_centered_transposed, data_centered_per_t)  # (num_t_vals x p x p)
+
+  return(list(K = K_t, dK = dK, d2K = d2K_batch))
 }
+
+
 
 #' Estimate an Overcomplete Independent Component Analysis (OICA) Using Torch and Empirical Cumulant Generating Functions
 #'
