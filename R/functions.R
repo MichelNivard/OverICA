@@ -127,10 +127,10 @@ torch_ecgf_batch <- function(t_vectors, data_tensor) {
 #' @param lambda A numeric value for the L1 regularization parameter (default is 0.01).
 #' @param sigma A numeric value for the covariance penalty parameter (default is 0.01).
 #' @param tbound A numeric value specifying the standard deviation for t-values (default is 0.2).
-#' @param abound A numeric values that specifies the upper and lower bound of the uniformly sampled starting values for A (default is 0.5)
+#' @param abound A numeric value that specifies the upper and lower bound of the uniformly sampled starting values for A (default is 0.5).
 #' @param n_batch An integer specifying the batch size for the neural network (default is 1024).
 #' @param hidden_size An integer specifying the hidden size of the neural network (default is 10).
-#' @param neural_nets User specified, or previously fitted neural nets, if left at NULL the model will spin up new untrained neural networks.
+#' @param neural_nets User specified or previously fitted neural nets; if left at NULL, the model will initialize new untrained neural networks.
 #' @param clip_grad Should the gradient be clipped during optimization?
 #' @param use_adam Logical; whether to use the Adam optimizer first (default is TRUE).
 #' @param adam_epochs An integer specifying the number of epochs for Adam optimizer (default is 100).
@@ -140,12 +140,13 @@ torch_ecgf_batch <- function(t_vectors, data_tensor) {
 #' @param lbfgs_lr A numeric value specifying the learning rate for L-BFGS optimizer (default is 1).
 #' @param lbfgs_max_iter An integer specifying the max iterations per optimization step for L-BFGS (default is 20).
 #' @param lr_decay A numeric value specifying the decay rate for the multiplicative learning rate decay; set to 1 for no decay (default is 0.999).
-#' @return A list containing the estimated A matrix (\code{A_est}), covariance matrix (\code{cov}), the neural nets (\code{neural_nets}) and the loss history.
+#' @param num_runs An integer specifying the number of times to run the estimation (default is 1).
+#' @return A list containing the best result (\code{best_result}) and a list of all runs (\code{all_runs}).
 #' @import torch
 #' @export
 #' @examples
 #' # Assuming 'data' is a matrix of observed data
-#' result <- estimate_parameters(data, k = 5)
+#' result <- overica(data, k = 5, num_runs = 10)
 overica <- function(
     data,
     k,
@@ -157,15 +158,16 @@ overica <- function(
     n_batch = 1024,
     hidden_size = 10,
     neural_nets = NULL,
-    clip_grad=TRUE,
+    clip_grad = TRUE,
     use_adam = TRUE,       # Whether to use Adam optimizer first
     adam_epochs = 100,     # Number of epochs for Adam optimizer
     adam_lr = 0.01,        # Learning rate for Adam optimizer
     use_lbfgs = TRUE,      # Whether to use L-BFGS optimizer after Adam
     lbfgs_epochs = 50,     # Number of epochs for L-BFGS optimizer
     lbfgs_lr = 1,          # Learning rate for L-BFGS optimizer
-    lbfgs_max_iter = 20,    # Max iterations per optimization step for L-BFGS
-    lr_decay = 0.999       # decay rate for multiplicative learning rate decay, set to 1 for no decay
+    lbfgs_max_iter = 20,   # Max iterations per optimization step for L-BFGS
+    lr_decay = 0.999,      # Decay rate for multiplicative learning rate decay, set to 1 for no decay
+    num_runs = 1           # Number of times to run the estimation
 ) {
   # Check if CUDA is available
   device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
@@ -176,46 +178,16 @@ overica <- function(
   n <- nrow(data)
   p <- ncol(data)
 
-  # Initialize parameters
-  A_params <- torch_tensor(runif(p * k, min = -abound, max = abound), requires_grad = TRUE, device = device)
+  # Sample t_vals_o once outside fn()
+  t_vals_o <- matrix(0, nrow = 1, ncol = p)
+  additional_t_vals <- matrix(rnorm((num_t_vals - 1) * p, 0, tbound), ncol = p)
+  t_vals_o <- rbind(t_vals_o, additional_t_vals)
+  t_vals_o_tensor <- torch_tensor(t_vals_o, dtype = torch_float(), device = device)
 
-  NeuralNets <- nn_module(
-    initialize = function(k, hidden_size) {
-      self$nets <- nn_module_list()
-      for (i in 1:k) {
-        self$nets$append(
-          nn_sequential(
-            nn_linear(1, hidden_size),
-            nn_relu(),
-            nn_linear(hidden_size, 1)
-          )
-        )
-      }
-    },
-    forward = function(z) {
-      # z is of shape (n_batch, k)
-      s_list <- list()
-      for (i in 1:k) {
-        z_i <- z[, i, drop = FALSE]
-        s_list[[i]] <- self$nets[[i]](z_i)
-      }
-      s <- torch_cat(s_list, dim = 2)
-      return(s)
-    }
-  )
-
-  # Initialize neural_nets
-  if (is.null(neural_nets)) {
-    neural_nets <- NeuralNets$new(k = k, hidden_size = hidden_size)$to(device = device)
-  } else {
-    neural_nets <- neural_nets$to(device = device)
-  }
-
-  # Parameters to optimize
-  params <- c(list(A_params), neural_nets$parameters)
-
-  # Sample z ~ N(0,I) once and keep it fixed
-  z_fixed <- torch_randn(c(n_batch, k), device = device)
+  # Compute data_dK and data_d2K once
+  ecgf_result_data <- torch_ecgf_batch(t_vals_o_tensor, data_tensor)
+  data_dK <- ecgf_result_data$dK  # (num_t_vals x p)
+  data_d2K <- ecgf_result_data$d2K  # (num_t_vals x p x p)
 
   # Covariance penalty function
   covariance_penalty <- function(s) {
@@ -232,126 +204,184 @@ overica <- function(
     return(cov_matrix)
   }
 
-  # Sample t_vals_o once outside fn()
-  t_vals_o <- matrix(0, nrow = 1, ncol = p)
-  additional_t_vals <- matrix(rnorm((num_t_vals - 1) * p, 0, tbound), ncol = p)
-  t_vals_o <- rbind(t_vals_o, additional_t_vals)
-  t_vals_o_tensor <- torch_tensor(t_vals_o, dtype = torch_float(), device = device)
+  # Initialize lists to store all runs
+  all_runs <- vector('list', num_runs)
+  best_loss <- Inf
+  best_result <- NULL
 
-  # Compute data_dK and data_d2K once
-  ecgf_result_data <- torch_ecgf_batch(t_vals_o_tensor, data_tensor)
-  data_dK <- ecgf_result_data$dK  # (num_t_vals x p)
-  data_d2K <- ecgf_result_data$d2K  # (num_t_vals x p x p)
+  for (run_idx in 1:num_runs) {
+    cat("Run", run_idx, "/", num_runs, "\n")
 
-  # Define the objective function
-  fn <- function() {
-    # Reshape A_params into a p x k matrix
-    A <- A_params$view(c(p, k))
+    # Initialize parameters
+    A_params <- torch_tensor(runif(p * k, min = -abound, max = abound), requires_grad = TRUE, device = device)
 
-    # Use fixed z
-    z <- z_fixed
-
-    # Pass z through neural_nets to get s
-    s <- neural_nets(z)
-
-    # Compute data_hat = s %*% t(A)
-    data_hat <- s$matmul(A$t())
-
-    # Compute model's K(t), dK(t), d2K(t) using data_hat
-    ecgf_result_model <- torch_ecgf_batch(t_vals_o_tensor, data_hat)
-    model_dK <- ecgf_result_model$dK  # (num_t_vals x p)
-    model_d2K <- ecgf_result_model$d2K  # (num_t_vals x p x p)
-
-    # Compute the differences and accumulate the losses
-    diff_dK <- model_dK - data_dK  # (num_t_vals x p)
-    loss_dK <- torch_sum(diff_dK * diff_dK)
-
-    diff_d2K <- model_d2K - data_d2K  # (num_t_vals x p x p)
-    loss_d2K <- torch_sum(diff_d2K * diff_d2K)
-
-    # Total loss
-    loss <- loss_dK + loss_d2K
-
-    # Add regularization terms
-    loss <- loss + lambda * torch_sum(torch_abs(A)) + sigma * covariance_penalty(s)
-
-    return(loss)
-  }
-
-  # Initialize lists to store losses
-  adam_losses <- numeric(0)
-  lbfgs_losses <- numeric(0)
-
-  # Adam optimizer
-  if (use_adam) {
-    optimizer_adam <- optim_adam(params = params, lr = adam_lr)
-    scheduler <- lr_multiplicative(optimizer_adam, lr_lambda = function(epoch) lr_decay)
-    adam_losses <- numeric(adam_epochs)
-
-    for (epoch in 1:adam_epochs) {
-      optimizer_adam$zero_grad()
-      loss_value <- fn()
-      loss_value$backward()
-      if(clip_grad){
-        nn_utils_clip_grad_norm_(params, max_norm = 2)
+    NeuralNets <- nn_module(
+      initialize = function(k, hidden_size) {
+        self$nets <- nn_module_list()
+        for (i in 1:k) {
+          self$nets$append(
+            nn_sequential(
+              nn_linear(1, hidden_size),
+              nn_relu(),
+              nn_linear(hidden_size, 1)
+            )
+          )
+        }
+      },
+      forward = function(z) {
+        # z is of shape (n_batch, k)
+        s_list <- list()
+        for (i in 1:k) {
+          z_i <- z[, i, drop = FALSE]
+          s_list[[i]] <- self$nets[[i]](z_i)
+        }
+        s <- torch_cat(s_list, dim = 2)
+        return(s)
       }
-      optimizer_adam$step()
-      scheduler$step()
-      adam_losses[epoch] <- as.numeric(loss_value$item())
-
-      # Optional: Print progress
-      if (epoch %% 10 == 0 || epoch == adam_epochs) {
-        current_lr <- optimizer_adam$param_groups[[1]]$lr
-        cat("\r", "Adam Epoch:", epoch, "Loss:", adam_losses[epoch], "LR:", current_lr)
-      }
-    }
-    cat("\n")
-  }
-
-  # L-BFGS optimizer
-  if (use_lbfgs) {
-    optimizer_lbfgs <- optim_lbfgs(
-      params = params,
-      lr = lbfgs_lr,
-      max_iter = lbfgs_max_iter,
-      history_size = 10,
-      line_search_fn = "strong_wolfe"
     )
-    scheduler_lbfgs <- lr_multiplicative(optimizer_lbfgs, lr_lambda = function(epoch) lr_decay)
-    lbfgs_losses <- numeric(lbfgs_epochs)
 
-    for (epoch in 1:lbfgs_epochs) {
-      closure <- function() {
-        optimizer_lbfgs$zero_grad()
-        loss <- fn()
-        loss$backward()
-        return(loss)
-      }
-      loss_value <- optimizer_lbfgs$step(closure)
-      scheduler_lbfgs$step()
-      lbfgs_losses[epoch] <- as.numeric(loss_value$item())
-
-      # Optional: Print progress
-      if (epoch %% 1 == 0) {
-        current_lr <- optimizer_lbfgs$param_groups[[1]]$lr
-        cat("\r", "L-BFGS Epoch:", epoch, "Loss:", lbfgs_losses[epoch], "LR:", current_lr)
-      }
+    # Initialize neural_nets
+    if (is.null(neural_nets)) {
+      neural_nets_run <- NeuralNets$new(k = k, hidden_size = hidden_size)$to(device = device)
+    } else {
+      neural_nets_run <- neural_nets$to(device = device)
     }
-    cat("\n")
+
+    # Parameters to optimize
+    params <- c(list(A_params), neural_nets_run$parameters)
+
+    # Sample z ~ N(0,I) once and keep it fixed
+    z_fixed <- torch_randn(c(n_batch, k), device = device)
+
+    # Define the objective function
+    fn <- function() {
+      # Reshape A_params into a p x k matrix
+      A <- A_params$view(c(p, k))
+
+      # Use fixed z
+      z <- z_fixed
+
+      # Pass z through neural_nets to get s
+      s <- neural_nets_run(z)
+
+      # Compute data_hat = s %*% t(A)
+      data_hat <- s$matmul(A$t())
+
+      # Compute model's K(t), dK(t), d2K(t) using data_hat
+      ecgf_result_model <- torch_ecgf_batch(t_vals_o_tensor, data_hat)
+      model_dK <- ecgf_result_model$dK  # (num_t_vals x p)
+      model_d2K <- ecgf_result_model$d2K  # (num_t_vals x p x p)
+
+      # Compute the differences and accumulate the losses
+      diff_dK <- model_dK - data_dK  # (num_t_vals x p)
+      loss_dK <- torch_sum(diff_dK * diff_dK)
+
+      diff_d2K <- model_d2K - data_d2K  # (num_t_vals x p x p)
+      loss_d2K <- torch_sum(diff_d2K * diff_d2K)
+
+      # Total loss
+      loss <- loss_dK + loss_d2K
+
+      # Add regularization terms
+      loss <- loss + lambda * torch_sum(torch_abs(A)) + sigma * covariance_penalty(s)
+
+      return(loss)
+    }
+
+    # Initialize lists to store losses
+    adam_losses <- numeric(0)
+    lbfgs_losses <- numeric(0)
+
+    # Adam optimizer
+    if (use_adam) {
+      optimizer_adam <- optim_adam(params = params, lr = adam_lr)
+      scheduler <- lr_multiplicative(optimizer_adam, lr_lambda = function(epoch) lr_decay)
+      adam_losses <- numeric(adam_epochs)
+
+      for (epoch in 1:adam_epochs) {
+        optimizer_adam$zero_grad()
+        loss_value <- fn()
+        loss_value$backward()
+        if (clip_grad) {
+          nn_utils_clip_grad_norm_(params, max_norm = 2)
+        }
+        optimizer_adam$step()
+        scheduler$step()
+        adam_losses[epoch] <- as.numeric(loss_value$item())
+
+        # Optional: Print progress
+        if (epoch %% 10 == 0 || epoch == adam_epochs) {
+          current_lr <- optimizer_adam$param_groups[[1]]$lr
+          cat("\r", "Run:", run_idx, "Adam Epoch:", epoch, "Loss:", adam_losses[epoch], "LR:", current_lr)
+        }
+      }
+      cat("\n")
+    }
+
+    # L-BFGS optimizer
+    if (use_lbfgs) {
+      optimizer_lbfgs <- optim_lbfgs(
+        params = params,
+        lr = lbfgs_lr,
+        max_iter = lbfgs_max_iter,
+        history_size = 10,
+        line_search_fn = "strong_wolfe"
+      )
+      scheduler_lbfgs <- lr_multiplicative(optimizer_lbfgs, lr_lambda = function(epoch) lr_decay)
+      lbfgs_losses <- numeric(lbfgs_epochs)
+
+      for (epoch in 1:lbfgs_epochs) {
+        closure <- function() {
+          optimizer_lbfgs$zero_grad()
+          loss <- fn()
+          loss$backward()
+          return(loss)
+        }
+        loss_value <- optimizer_lbfgs$step(closure)
+        scheduler_lbfgs$step()
+        lbfgs_losses[epoch] <- as.numeric(loss_value$item())
+
+        # Optional: Print progress
+        if (epoch %% 1 == 0) {
+          current_lr <- optimizer_lbfgs$param_groups[[1]]$lr
+          cat("\r", "Run:", run_idx, "L-BFGS Epoch:", epoch, "Loss:", lbfgs_losses[epoch], "LR:", current_lr)
+        }
+      }
+      cat("\n")
+    }
+
+    # Compute the final loss value
+    final_loss <- as.numeric(fn()$item())
+
+    # Retrieve optimized parameters
+    A_est <- A_params$view(c(p, k))
+    cov_est <- covariance_matrix(neural_nets_run(z_fixed))
+
+    # Save the current result
+    current_result <- list(
+      A_est = A_est,
+      cov = cov_est,
+      neural_nets = neural_nets_run,
+      adam_losses = if (use_adam) adam_losses else NULL,
+      lbfgs_losses = if (use_lbfgs) lbfgs_losses else NULL,
+      final_loss = final_loss
+    )
+    all_runs[[run_idx]] <- current_result
+
+    # Check if this is the best result
+    if (final_loss < best_loss) {
+      best_loss <- final_loss
+      best_result <- current_result
+    }
   }
 
-  # Retrieve optimized parameters
-  A_est <- A_params$view(c(p, k))
-
-  # Return estimated A, covariance matrix, neural networks, and loss history
+  # Return the best result and all runs
   return(list(
-    A_est = A_est,
-    cov = covariance_matrix(neural_nets(z_fixed)),
-    neural_nets = neural_nets,
-    adam_losses = if (use_adam) adam_losses else NULL,
-    lbfgs_losses = if (use_lbfgs) lbfgs_losses else NULL
+    best_result = best_result,
+    all_runs = all_runs
   ))
 }
+
 
 #' Generate Non-Gaussian Random Variables
 #'

@@ -23,7 +23,8 @@ overica(
   lbfgs_epochs = 50,
   lbfgs_lr = 1,
   lbfgs_max_iter = 20,
-  lr_decay = 0.999
+  lr_decay = 0.999,
+  num_runs = 1
 )
 }
 \arguments{
@@ -39,13 +40,13 @@ overica(
 
 \item{tbound}{A numeric value specifying the standard deviation for t-values (default is 0.2).}
 
-\item{abound}{A numeric values that specifies the upper and lower bound of the uniformly sampled starting values for A (default is 0.5)}
+\item{abound}{A numeric value that specifies the upper and lower bound of the uniformly sampled starting values for A (default is 0.5).}
 
 \item{n_batch}{An integer specifying the batch size for the neural network (default is 1024).}
 
 \item{hidden_size}{An integer specifying the hidden size of the neural network (default is 10).}
 
-\item{neural_nets}{User specified, or previously fitted neural nets, if left at NULL the model will spin up new untrained neural networks.}
+\item{neural_nets}{User specified or previously fitted neural nets; if left at NULL, the model will initialize new untrained neural networks.}
 
 \item{clip_grad}{Should the gradient be clipped during optimization?}
 
@@ -64,14 +65,16 @@ overica(
 \item{lbfgs_max_iter}{An integer specifying the max iterations per optimization step for L-BFGS (default is 20).}
 
 \item{lr_decay}{A numeric value specifying the decay rate for the multiplicative learning rate decay; set to 1 for no decay (default is 0.999).}
+
+\item{num_runs}{An integer specifying the number of times to run the estimation (default is 1).}
 }
 \value{
-A list containing the estimated A matrix (\code{A_est}), covariance matrix (\code{cov}), the neural nets (\code{neural_nets}) and the loss history.
+A list containing the best result (\code{best_result}) and a list of all runs (\code{all_runs}).
 }
 \description{
 This function estimates parameters of an OICA model using torch tensors and ECGFs. It optimizes the parameters using a combination of Adam and L-BFGS optimizers.
 }
 \examples{
 # Assuming 'data' is a matrix of observed data
-result <- estimate_parameters(data, k = 5)
+result <- overica(data, k = 5, num_runs = 10)
 }
