@@ -27,7 +27,9 @@ Good run             |  Bad run
 :-------------------------:|:-------------------------:
 ![image](https://github.com/user-attachments/assets/f69e2e96-9bf2-4caa-b3cf-2b70ae8835dc) | ![image](https://github.com/user-attachments/assets/2fa8603d-9b61-41ed-a0e3-71bf3cf81248)
 
-In this case the better soliution had a lower loss, which obviously is a good indicator, but this isnt always the case as the loss can depend on thye speciific set of t-values that was sampled and we can overfit. In an emperical application you'd never know which is closer to the truth and without further exploration it would be hard to favor one over the other. It's essential to try a whole host of optimizer settings to figure out which gives you lower loss/better convergence. Once you are satisfied with the optimizer settings you can try a few independent runs and compare results. Work on tools to either aggregate multiple runs to retain stable components, and/or tools to compare across runs on valitation data or on unseen validation t-values is ongoing. 
+In this case the better solution had a lower loss, which obviously is a good indicator, but this isnt always the case as the loss can depend on thye speciific set of t-values that was sampled and we can overfit. In an emperical application you'd never know which is closer to the truth and without further exploration it would be hard to favor one over the other. It's essential to try a whole host of optimizer settings to figure out which gives you lower loss/better convergence. Once you are satisfied with the optimizer settings you can try a few independent runs and compare results. 
+
+I have implemented a `num_runs` argument in `overica()` which lets you run the same model a number of times and keeps all runs, you can then use the best run (in terms of loss) or compute thhe median result acorss runs.
 
 # Installation
 
