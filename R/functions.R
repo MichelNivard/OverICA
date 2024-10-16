@@ -438,6 +438,7 @@ generate_matrix <- function(n, k) {
 #' @param num_runs An integer specifying the number of runs.
 #' @param p An integer specifying the number of observed variables.
 #' @param k An integer specifying the number of latent variables.
+#' @param maxit Maximum number of iterations for the constrained clustering algorithm
 #' @return A matrix representing the averaged mixing matrix after aligning and averaging over runs.
 #' @importFrom stats density cor
 #' @importFrom dplyr distinct
@@ -450,16 +451,16 @@ generate_matrix <- function(n, k) {
 #' averaged_A <- avgOICAruns(result, num_runs, p, k)
 #' }
 #' @export
-avgOICAruns <- function(result, num_runs, p, k) {
+avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 
   # Retrieve the estimated A matrix from the best result
   A_est <- as.matrix(result$best_result$A_est, p, k)
 
   # Initialize A_base with the A matrix from the first run
   A_base <- as.matrix(result$all_runs[[1]]$A_est, p, k)
-
+  A_base <- cbind(align_columns(as.matrix(result$all_runs[[2]]$A_est, p, k),A_base),A_base)
   # Loop through the remaining runs and append each A matrix to A_base
-  for (i in 2:num_runs) {
+  for (i in 3:num_runs) {
     A_new <- result$all_runs[[i]]$A_est
     A_base <- cbind(as.matrix(A_new, p, k), A_base)
   }
@@ -495,7 +496,7 @@ avgOICAruns <- function(result, num_runs, p, k) {
   }
 
   # Perform clustering using the ckmeans algorithm with mustLink and cantLink constraints
-  clust <- ckmeans(A_base_t, mustLink = matrix(c(1, k + 1), nrow = 1), cantLink = a, k = k2, maxIter = 2000)
+  clust <- ckmeans(A_base_t, mustLink = matrix(c(1, k + 1), nrow = 1), cantLink = a, k = k2, maxIter = maxit)
 
   # Initialize a matrix to store the median of the clustered A matrix
   A_med <- matrix(NA, p, k2)
