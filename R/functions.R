@@ -452,128 +452,86 @@ generate_matrix <- function(n, k) {
 #' @export
 avgOICAruns <- function(result, num_runs, p, k) {
 
+  # Retrieve the estimated A matrix from the best result
+  A_est <- as.matrix(result$best_result$A_est, p, k)
 
-  # Initialize A_base with the estimated A from the first run
-  # Convert the torch tensor to an R matrix
-  A_base <- as.matrix(as.array(result$all_runs[[1]]$A_est$cpu()))
+  # Initialize A_base with the A matrix from the first run
+  A_base <- as.matrix(result$all_runs[[1]]$A_est, p, k)
 
-  # Loop over the remaining runs to collect all estimated A matrices
+  # Loop through the remaining runs and append each A matrix to A_base
   for (i in 2:num_runs) {
-    # Extract the estimated A matrix from the i-th run
-    A_new <- as.matrix(as.array(result$all_runs[[i]]$A_est$cpu()))
-    # Combine the new A matrix with A_base by binding columns
-    A_base <- cbind(A_base, A_new)
+    A_new <- result$all_runs[[i]]$A_est
+    A_base <- cbind(as.matrix(A_new, p, k), A_base)
   }
 
-  # Include sign-flipped versions to account for sign ambiguity in ICA
-  A_base <- cbind(A_base, -A_base)
+  # Combine A_base with its negated version to allow for sign-flip ambiguity
+  A_base <- cbind(A_base, -1 * A_base)
 
-  # Transpose A_base so that components are along the rows
-  # Now, each row represents a component from all runs (including sign-flipped)
+  # Transpose A_base for further analysis
   A_base_t <- t(A_base)
 
   # Function to compute the mode of a continuous variable using Kernel Density Estimation (KDE)
   mode_kde <- function(x, bw = "nrd0") {
-    # Ensure x is a numeric vector and remove NA values
+    # Ensure x is numeric and remove NA values
     x <- na.omit(as.numeric(x))
 
-    # Estimate the density using the specified bandwidth method
+    # Estimate the density of x using the specified bandwidth method
     dens <- density(x, bw = bw)
 
-    # Find the mode as the point with the highest density
+    # Find the mode by locating the point with the highest density
     mode_value <- dens$x[which.max(dens$y)]
 
     return(mode_value)
   }
 
-  # Define parameters for clustering
-  k2 <- 2 * k            # Total number of clusters (considering sign flips)
-  nr2 <- 2 * num_runs    # Total number of runs (original and sign-flipped)
+  # Set dimensions for clustering and merging process
+  k2 <- 2 * k
+  nr2 <- 2 * num_runs
 
-  # Create cannot-link constraints to prevent components from the same run being in the same cluster
-  # Initialize the constraint matrix 'a'
-  a <- cbind(rep(1:k, each = k2), rep(1:k, k2))
+  # Create matrix of pairwise indices for the clustering process
+  a <- cbind(rep(1:k, k2), rep(1:k, each = k2))
   for (i in 2:nr2) {
-    # Calculate the indices for the current run
-    idx_start <- (i - 1) * k + 1
-    idx_end <- i * k
-    indices <- idx_start:idx_end
-    # Create all combinations of indices within this run for cannot-link constraints
-    cl_pairs <- cbind(rep(indices, each = k2), rep(indices, k2))
-    a <- rbind(a, cl_pairs)
+    a <- rbind(a, cbind(rep(((i - 1) * k + 1):(i * k), k2), rep(((i - 1) * k + 1):(i * k), each = k2)))
   }
 
-  # Perform constrained k-means clustering with must-link and cannot-link constraints
-  # Note: 'ckmeans' is assumed to be a function from an external package that supports constrained clustering
-  # You need to install and load the package that provides 'ckmeans', such as 'conclust'
-  # The 'mustLink' constraint forces certain points to be in the same cluster
-  # The 'cantLink' constraint prevents certain points from being in the same cluster
-  clust <- ckmeans(
-    A_base_t,
-    mustLink = matrix(c(1, k + 1), nrow = 1),
-    cantLink = a,
-    k = k2,
-    maxIter = 2000
-  )
+  # Perform clustering using the ckmeans algorithm with mustLink and cantLink constraints
+  clust <- ckmeans(A_base_t, mustLink = matrix(c(1, k + 1), nrow = 1), cantLink = a, k = k2, maxIter = 2000)
 
-  # Initialize matrix to store the modes of each cluster
-  A_med <- matrix(NA, nrow = p, ncol = k2)
+  # Initialize a matrix to store the median of the clustered A matrix
+  A_med <- matrix(NA, p, k2)
 
-  # Compute the mode of each cluster for each variable
+  # Compute the mode for each cluster and store it in A_med
   for (i in 1:k2) {
-    # Get the indices of components belonging to cluster i
-    cluster_indices <- which(clust == i)
-    # Extract the data for the current cluster
-    cluster_data <- A_base_t[cluster_indices, , drop = FALSE]
-    # Apply the mode_kde function across variables (columns)
-    A_med[, i] <- apply(cluster_data, 2, mode_kde)
+    A_med[,i] <- apply(A_base_t[clust == i,], 2, mode_kde)
   }
 
-  # Compute the correlation matrix of the cluster modes
-  cor_matrix <- cor(A_med)
+  # Calculate the correlation matrix of A_med to identify loadings with high correlations
+  cor <- cor(A_med)
+  pairs <- matrix(NA, k2, 2)
 
-  # Initialize matrix to store pairs of components with minimal correlation
-  pairs <- matrix(NA, nrow = k2, ncol = 2)
-
-  # Find pairs of components with minimal correlation (likely sign-flipped versions)
+  # Find pairs of loadings with the smallest correlation and store their indices
   for (i in 1:k2) {
-    # Find the index of the component with the minimal correlation to component i
-    # Exclude self-correlation by setting the diagonal to NA
-    cor_vector <- cor_matrix[, i]
-    cor_vector[i] <- NA
-    # Get the index of the component with minimal correlation
-    w <- which.min(cor_vector)
-    pairs[i, ] <- c(i, w)
+    w <- which(cor[,i] == min(cor[,i]))
+    pairs[i,] <- c(w, i)
   }
-  print("check")
-  # Create a unique index to identify each pair
-  index <- apply(pairs, 1, function(row) paste(sort(row), collapse = "_"))
 
-  # Convert pairs to a data frame and remove duplicate pairs
-  pairs_df <- data.frame(pairs, index, stringsAsFactors = FALSE)
-  pairs_df <- distinct(pairs_df, index, .keep_all = TRUE)
+  # Generate a unique index for each pair and remove duplicates
+  index <- pairs[,1] * pairs[,2]
+  pairs <- cbind.data.frame(pairs, index)
+  pairs <- distinct(pairs, index, .keep_all = TRUE)
 
-  # Remove pairs where components are the same
-  pairs_df <- pairs_df[pairs_df[, 1] != pairs_df[, 2], ]
+  # Remove pairs where the two indices are equal (no need to merge identical components)
+  pairs <- pairs[pairs[,1] != pairs[,2],]
 
-  # Initialize matrix to store the merged components
+  # Initialize matrix to store the merged median A matrix
   A_med_merge <- matrix(NA, nrow = p, ncol = k)
 
-  # Average the paired components (accounting for sign flips)
+  # Merge the most correlated pairs by averaging them, adjusting for sign flips
   for (i in 1:k) {
-    idx1 <- pairs_df[i, 1]
-    idx2 <- pairs_df[i, 2]
-    # Adjust sign if necessary based on correlation
-    if (cor_matrix[idx1, idx2] < 0) {
-      # Components are negatively correlated; adjust the sign of one component
-      A_med_merge[, i] <- (A_med[, idx1] + -1*A_med[, idx2]) / 2
-    } else {
-      # Components are positively correlated; average directly
-      A_med_merge[, i] <- (A_med[, idx1] + A_med[, idx2]) / 2
-    }
+    A_med_merge[,i] <- (A_med[,pairs[i,1]] + -1 * A_med[,pairs[i,2]]) / 2
   }
 
-  # Return the averaged mixing matrix
+  # Return the final merged matrix of median loadings
   return(A_med_merge)
 }
 
