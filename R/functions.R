@@ -545,7 +545,7 @@ avgOICAruns <- function(result, num_runs, p, k) {
     w <- which.min(cor_vector)
     pairs[i, ] <- c(i, w)
   }
-
+  print("check")
   # Create a unique index to identify each pair
   index <- apply(pairs, 1, function(row) paste(sort(row), collapse = "_"))
 
@@ -566,7 +566,7 @@ avgOICAruns <- function(result, num_runs, p, k) {
     # Adjust sign if necessary based on correlation
     if (cor_matrix[idx1, idx2] < 0) {
       # Components are negatively correlated; adjust the sign of one component
-      A_med_merge[, i] <- (A_med[, idx1] - A_med[, idx2]) / 2
+      A_med_merge[, i] <- (A_med[, idx1] + -1*A_med[, idx2]) / 2
     } else {
       # Components are positively correlated; average directly
       A_med_merge[, i] <- (A_med[, idx1] + A_med[, idx2]) / 2
