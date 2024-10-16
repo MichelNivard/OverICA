@@ -428,3 +428,152 @@ generate_matrix <- function(n, k) {
 
   return(matrix_data)
 }
+#' Average Multiple OICA Runs to Obtain a Consensus Mixing Matrix
+#'
+#' This function averages the estimated mixing matrices from multiple runs of the `overica` function.
+#' It aligns components across runs, accounting for sign ambiguity inherent in ICA, by clustering the
+#' components and combining sign-flipped versions to obtain a consensus mixing matrix.
+#'
+#' @param result A list object returned by the `overica` function with multiple runs, containing the estimated mixing matrices.
+#' @param num_runs An integer specifying the number of runs.
+#' @param p An integer specifying the number of observed variables.
+#' @param k An integer specifying the number of latent variables.
+#' @return A matrix representing the averaged mixing matrix after aligning and averaging over runs.
+#' @importFrom stats density cor
+#' @importFrom dplyr distinct
+#' @examples
+#' \dontrun{
+#' # Assuming 'result' is the output from overica with multiple runs
+#' p <- ncol(data)
+#' k <- 5
+#' num_runs <- 10
+#' averaged_A <- avgOICAruns(result, num_runs, p, k)
+#' }
+#' @export
+avgOICAruns <- function(result, num_runs, p, k) {
+
+
+  # Initialize A_base with the estimated A from the first run
+  # Convert the torch tensor to an R matrix
+  A_base <- as.matrix(as.array(result$all_runs[[1]]$A_est$cpu()))
+
+  # Loop over the remaining runs to collect all estimated A matrices
+  for (i in 2:num_runs) {
+    # Extract the estimated A matrix from the i-th run
+    A_new <- as.matrix(as.array(result$all_runs[[i]]$A_est$cpu()))
+    # Combine the new A matrix with A_base by binding columns
+    A_base <- cbind(A_base, A_new)
+  }
+
+  # Include sign-flipped versions to account for sign ambiguity in ICA
+  A_base <- cbind(A_base, -A_base)
+
+  # Transpose A_base so that components are along the rows
+  # Now, each row represents a component from all runs (including sign-flipped)
+  A_base_t <- t(A_base)
+
+  # Function to compute the mode of a continuous variable using Kernel Density Estimation (KDE)
+  mode_kde <- function(x, bw = "nrd0") {
+    # Ensure x is a numeric vector and remove NA values
+    x <- na.omit(as.numeric(x))
+
+    # Estimate the density using the specified bandwidth method
+    dens <- density(x, bw = bw)
+
+    # Find the mode as the point with the highest density
+    mode_value <- dens$x[which.max(dens$y)]
+
+    return(mode_value)
+  }
+
+  # Define parameters for clustering
+  k2 <- 2 * k            # Total number of clusters (considering sign flips)
+  nr2 <- 2 * num_runs    # Total number of runs (original and sign-flipped)
+
+  # Create cannot-link constraints to prevent components from the same run being in the same cluster
+  # Initialize the constraint matrix 'a'
+  a <- cbind(rep(1:k, each = k2), rep(1:k, k2))
+  for (i in 2:nr2) {
+    # Calculate the indices for the current run
+    idx_start <- (i - 1) * k + 1
+    idx_end <- i * k
+    indices <- idx_start:idx_end
+    # Create all combinations of indices within this run for cannot-link constraints
+    cl_pairs <- cbind(rep(indices, each = k2), rep(indices, k2))
+    a <- rbind(a, cl_pairs)
+  }
+
+  # Perform constrained k-means clustering with must-link and cannot-link constraints
+  # Note: 'ckmeans' is assumed to be a function from an external package that supports constrained clustering
+  # You need to install and load the package that provides 'ckmeans', such as 'conclust'
+  # The 'mustLink' constraint forces certain points to be in the same cluster
+  # The 'cantLink' constraint prevents certain points from being in the same cluster
+  clust <- ckmeans(
+    A_base_t,
+    mustLink = matrix(c(1, k + 1), nrow = 1),
+    cantLink = a,
+    k = k2,
+    maxIter = 2000
+  )
+
+  # Initialize matrix to store the modes of each cluster
+  A_med <- matrix(NA, nrow = p, ncol = k2)
+
+  # Compute the mode of each cluster for each variable
+  for (i in 1:k2) {
+    # Get the indices of components belonging to cluster i
+    cluster_indices <- which(clust == i)
+    # Extract the data for the current cluster
+    cluster_data <- A_base_t[cluster_indices, , drop = FALSE]
+    # Apply the mode_kde function across variables (columns)
+    A_med[, i] <- apply(cluster_data, 2, mode_kde)
+  }
+
+  # Compute the correlation matrix of the cluster modes
+  cor_matrix <- cor(A_med)
+
+  # Initialize matrix to store pairs of components with minimal correlation
+  pairs <- matrix(NA, nrow = k2, ncol = 2)
+
+  # Find pairs of components with minimal correlation (likely sign-flipped versions)
+  for (i in 1:k2) {
+    # Find the index of the component with the minimal correlation to component i
+    # Exclude self-correlation by setting the diagonal to NA
+    cor_vector <- cor_matrix[, i]
+    cor_vector[i] <- NA
+    # Get the index of the component with minimal correlation
+    w <- which.min(cor_vector)
+    pairs[i, ] <- c(i, w)
+  }
+
+  # Create a unique index to identify each pair
+  index <- apply(pairs, 1, function(row) paste(sort(row), collapse = "_"))
+
+  # Convert pairs to a data frame and remove duplicate pairs
+  pairs_df <- data.frame(pairs, index, stringsAsFactors = FALSE)
+  pairs_df <- distinct(pairs_df, index, .keep_all = TRUE)
+
+  # Remove pairs where components are the same
+  pairs_df <- pairs_df[pairs_df[, 1] != pairs_df[, 2], ]
+
+  # Initialize matrix to store the merged components
+  A_med_merge <- matrix(NA, nrow = p, ncol = k)
+
+  # Average the paired components (accounting for sign flips)
+  for (i in 1:k) {
+    idx1 <- pairs_df[i, 1]
+    idx2 <- pairs_df[i, 2]
+    # Adjust sign if necessary based on correlation
+    if (cor_matrix[idx1, idx2] < 0) {
+      # Components are negatively correlated; adjust the sign of one component
+      A_med_merge[, i] <- (A_med[, idx1] - A_med[, idx2]) / 2
+    } else {
+      # Components are positively correlated; average directly
+      A_med_merge[, i] <- (A_med[, idx1] + A_med[, idx2]) / 2
+    }
+  }
+
+  # Return the averaged mixing matrix
+  return(A_med_merge)
+}
+

@@ -1,6 +1,6 @@
 Package: OverICA
 Type: Package
-Title: Overcomplete Independent component analysis using generative aderserial networks and generalized covariance loss. 
+Title: Overcomplete Independent component analysis using generative adverserial networks and generalized covariance loss. 
 Version: 0.1.0
 Authors@R: 
     person(given = "Michel", 
@@ -8,9 +8,9 @@ Authors@R:
            email = "m.g.nivard@bristol.ac.uk", 
            role = c("aut", "cre"))
 Description: 
-    Provides functions for parameter estimation using Torch and Empirical Cumulant Generating Functions (ECGF). 
+    Provides functions to estiamte Overcomplete Independent componentn analysis, using Torch and aloss funciton based on Empirical Cumulant Generating Functions (ECGF). 
     The package includes utilities for generating non-Gaussian data, aligning estimated parameters with true parameters 
-    using the Hungarian algorithm, and optimizing parameters in torch using the Adam and L-BFGS optimizers.
+    using the Hungarian algorithm, and optimizing parameters in torch using the Adam and L-BFGS optimizers. The package further has facilities to average multiple runs minimize error in component recovery.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
