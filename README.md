@@ -1,6 +1,6 @@
 ## OverICA
 
-![experimental](https://lifecycle.r-lib.org/articles/stages.html#experimental}{\\figure{lifecycle-experimental.svg?raw=true)
+
 
 the R package `OverICA` performs overcomplete indepedent component analysis (ICA), meaning it estimates the relation between latent variables andobserved variables in the data, allowing there to be more latent then observed variables. We observe p variabes in matrix $y_{n,p}$, we estimate the matrix $A_{p,k}$ that contains the effects of k (non-gaussian) latent variables in $x_{n,k}$ on the observed variables. there are potentially more variables k then p. 
 
