@@ -533,6 +533,6 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
   }
 
   # Return the final merged matrix of median loadings
-  return(A_med_merge)
+  return(list(A_med = A_med_merge,A_all = A_base_t))
 }
 
