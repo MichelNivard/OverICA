@@ -503,7 +503,7 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 
   # Compute the mode for each cluster and store it in A_med
   for (i in 1:k2) {
-    A_med[,i] <- apply(A_base_t[clust == i,], 2, mode_kde)
+    A_med[,i] <- apply(A_base_t[clust == i,], 2, median)
   }
 
   # Calculate the correlation matrix of A_med to identify loadings with high correlations
