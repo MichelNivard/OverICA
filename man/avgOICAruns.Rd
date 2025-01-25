@@ -4,7 +4,7 @@
 \alias{avgOICAruns}
 \title{Average Multiple OICA Runs to Obtain a Consensus Mixing Matrix}
 \usage{
-avgOICAruns(result, num_runs, p, k)
+avgOICAruns(result, num_runs, p, k, maxit = 2000)
 }
 \arguments{
 \item{result}{A list object returned by the \code{overica} function with multiple runs, containing the estimated mixing matrices.}
@@ -14,6 +14,8 @@ avgOICAruns(result, num_runs, p, k)
 \item{p}{An integer specifying the number of observed variables.}
 
 \item{k}{An integer specifying the number of latent variables.}
+
+\item{maxit}{Maximum number of iterations for the constrained clustering algorithm}
 }
 \value{
 A matrix representing the averaged mixing matrix after aligning and averaging over runs.

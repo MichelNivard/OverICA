@@ -17,7 +17,8 @@ LazyData: true
 Imports:
     torch,
     clue,
-    MASS
+    MASS,
+    conclust
 Suggests:
     roxygen2,
     knitr,

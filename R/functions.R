@@ -537,3 +537,313 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
   return(out)
 }
 
+#' Compute Unique 4th-Order Central Moments (i <= j <= k <= l)
+#'
+#' For data X of shape (n, p), we first center each column, i.e. X_centered[,i] = X[,i] - mean_i.
+#' Then for each 1 <= i <= j <= k <= l <= p, we compute
+#'     E[ (X_i - mu_i) (X_j - mu_j) (X_k - mu_k) (X_l - mu_l) ].
+#'
+#' This yields a total of choose(p+3, 4) distinct moments (a 1D torch vector).
+#'
+#' @param X A torch tensor of shape (n, p).
+#' @return A 1D torch tensor of length choose(p+3, 4).
+#' @export
+torch_unique_4th_central_moments <- function(X) {
+  n <- X$size(1)
+  p <- X$size(2)
+
+  # Center the data
+  means <- X$mean(dim = 1)             # shape (p)
+  Xc <- X - means$view(c(1, p))        # shape (n, p)
+
+  # Generate combinations (i, j, k, l) with repetition
+  combos <- combn(p, 4, simplify = FALSE)
+
+  # Prepare output
+  out_len <- length(combos)
+  out <- torch_zeros(out_len, device = X$device)
+
+  # Compute the moments
+  for (idx in seq_along(combos)) {
+    indices <- combos[[idx]]
+    prod_ijkl <- Xc[, indices[1]] *
+                 Xc[, indices[2]] *
+                 Xc[, indices[3]] *
+                 Xc[, indices[4]]    # shape (n)
+    out[idx] <- prod_ijkl$mean()      # Compute mean for this combination
+  }
+
+  out
+}
+
+
+#' OverICA with Structural (I - B)^{-1}, Overcomplete Latent s, and Optional Error
+#'
+#' This function implements a model:
+#'   data_hat = (I - B)^(-1) (s %*% A) + e
+#'
+#' where:
+#'   - B is a p x p matrix of direct causal/structural effects among the p obs. variables.
+#'   - A is a p x k mixing matrix for the k latent sources s.
+#'   - s is produced by a small neural net from z ~ Normal(0,I).
+#'   - e ~ MVN(0, error_cov) is optional known noise (if error_cov is non-NULL).
+#'
+#' We estimate B, A, and the net's parameters by matching the user-supplied "moment_func"
+#' of data_hat to that of the observed data. Typically, you'd use e.g.
+#' torch_unique_4th_central_moments() or torch_all_4th_central_moments() for 4th-order stats,
+#' but you can supply any function returning a 1D torch vector for the mismatch.
+#'
+#' @param data A numeric matrix of shape (n, p) for observed data.
+#' @param k Number of latent sources s.
+#' @param moment_func A function that takes a (n_batch x p) torch tensor and returns
+#'   a 1D torch tensor of statistics to match. (e.g. `torch_unique_4th_central_moments`).
+#' @param error_cov An optional (p x p) covariance for Gaussian noise e. If NULL, no error added.
+#' @param maskB Optional p x p binary mask for B. 1 => estimate the entry, 0 => fix to 0.
+#' @param maskA Optional p x k binary mask for A. 1 => estimate, 0 => fix to 0.
+#' @param lambdaA L1 penalty on A.
+#' @param lambdaB L1 penalty on B.
+#' @param sigma Covariance penalty weight for the sources s (to encourage whitening).
+#' @param hidden_size Number of hidden units in the small MLP that maps z->s.
+#' @param n_batch Batch size for the random z draws.
+#' @param use_adam Whether to run Adam first.
+#' @param adam_epochs Number of Adam epochs.
+#' @param adam_lr Adam learning rate.
+#' @param use_lbfgs Whether to run L-BFGS afterwards.
+#' @param lbfgs_epochs Number of L-BFGS epochs (outer loop calls).
+#' @param lbfgs_lr L-BFGS learning rate.
+#' @param lbfgs_max_iter Max iteration per LBFGS step.
+#' @param lr_decay Multiplicative LR decay per epoch (1 => no decay).
+#' @param clip_grad Whether to clip the gradient norm to 2.
+#' @param num_runs How many random restarts to do, picking the best final loss.
+#'
+#' @return A list with:
+#'   \item{best_result}{the run with lowest final loss}
+#'   \item{all_runs}{a list of all runs and their final parameters/loss}
+#'
+#' @import torch
+#' @export
+overica_sem_full <- function(
+  data,
+  k,
+  moment_func,
+  error_cov = NULL,
+  maskB = NULL,
+  maskA = NULL,
+  lambdaA = 0.01,
+  lambdaB = 0.00,
+  sigma   = 0.01,
+  hidden_size = 10,
+  n_batch = 1024,
+  use_adam = TRUE,
+  adam_epochs = 100,
+  adam_lr = 0.01,
+  use_lbfgs = TRUE,
+  lbfgs_epochs = 50,
+  lbfgs_lr = 1,
+  lbfgs_max_iter = 20,
+  lr_decay = 0.999,
+  clip_grad = TRUE,
+  num_runs  = 1
+) {
+# Setup
+device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
+
+data_tensor <- torch_tensor(data, dtype=torch_float(), device=device)
+n <- nrow(data)
+p <- ncol(data)
+
+# 1) Precompute the observed statistic (4th moments, or user-defined)
+obs_stat <- moment_func(data_tensor)
+
+# 2) Optional masks
+if (is.null(maskB)) maskB <- matrix(1, p, p)
+if (is.null(maskA)) maskA <- matrix(1, p, k)
+maskB_t <- torch_tensor(maskB, dtype=torch_float(), device=device)$detach()
+maskA_t <- torch_tensor(maskA, dtype=torch_float(), device=device)$detach()
+
+# 3) Optional known error: factor it if provided
+L_error <- NULL
+if (!is.null(error_cov)) {
+  cov_t <- torch_tensor(error_cov, dtype=torch_float(), device=device)
+  L_error <- cov_t$cholesky(upper=FALSE)
+}
+
+# A small net to produce s from z
+NetModule <- nn_module(
+  initialize = function(k, hidden_size) {
+    self$nets <- nn_module_list()
+    for (i in seq_len(k)) {
+      self$nets$append(
+        nn_sequential(
+          nn_linear(1, hidden_size),
+          nn_relu(),
+          nn_linear(hidden_size, 1)
+        )
+      )
+    }
+  },
+  forward = function(z) {
+    out_list <- list()
+    for (i in seq_len(k)) {
+      out_list[[i]] <- self$nets[[i]](z[, i, drop=FALSE])
+    }
+    torch_cat(out_list, dim=2)  # shape: (n_batch, k)
+  }
+)
+
+# Cov penalty to encourage s to be white
+covariance_penalty <- function(s) {
+  ns <- s$size(1)
+  cov_s <- (s$t()$matmul(s)) / (ns - 1)
+  diff <- cov_s - torch_eye(k, device=device)
+  torch_sum(diff * diff)
+}
+
+all_runs <- vector("list", num_runs)
+best_loss <- Inf
+best_result <- NULL
+
+for (run_idx in seq_len(num_runs)) {
+  cat(sprintf("\n=== Run %d of %d ===\n", run_idx, num_runs))
+
+  # 4) Initialize B, A, and the net
+  B_params <- torch_tensor(
+    runif(p*p, min=-0.05, max=0.05),
+    requires_grad=TRUE, device=device
+  )
+  A_params <- torch_tensor(
+    runif(p*k, min=-0.2, max=0.2),
+    requires_grad=TRUE, device=device
+  )
+
+  nnets <- NetModule$new(k, hidden_size)$to(device=device)
+
+  # Combine in param list
+  params <- c(list(B_params, A_params), nnets$parameters)
+
+  # 5) Sample z ~ Normal(0,I), and maybe e
+  z_fixed <- torch_randn(c(n_batch, k), device=device)
+  e_fixed <- NULL
+  if (!is.null(L_error)) {
+    e_fixed <- torch_randn(c(n_batch, p), device=device)$matmul(L_error$t())
+  }
+
+  # 6) Define the forward/loss
+  fn <- function() {
+    B_mat <- B_params$view(c(p, p)) * maskB_t
+    A_mat <- A_params$view(c(p, k)) * maskA_t
+
+    # (I - B)
+    I_p <- torch_eye(p, device=device)
+    IB  <- I_p - B_mat
+
+    # Invert
+    # You might want to use a solve: M <- torch_linalg_solve(IB, I_p)
+    # or a stable decomposition. We'll do a direct inverse for simplicity:
+    M <- torch_inverse(IB)
+
+    # s
+    s_val <- nnets(z_fixed)  # (n_batch, k)
+
+    # s %*% A => (n_batch, p)
+    SA <- s_val$matmul(A_mat$t())
+
+    # data_hat = M %*% SA^T, then transpose => shape (n_batch, p)
+    # i.e. each row is M times the row of SA
+    data_hat <- M$matmul(SA$t())$t()
+
+    if (!is.null(e_fixed)) {
+      data_hat <- data_hat + e_fixed
+    }
+
+    # compute model's statistic
+    model_stat <- moment_func(data_hat)
+    diff <- model_stat - obs_stat
+    loss_stat <- torch_sum(diff * diff)
+
+    # L1 penalties
+    loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat))
+    loss_l1B <- lambdaB * torch_sum(torch_abs(B_mat))
+
+    # Cov penalty on s
+    loss_cov <- sigma * covariance_penalty(s_val)
+
+    loss <- loss_stat + loss_l1A + loss_l1B + loss_cov
+    loss
+  }
+
+  # 7) Adam (optional)
+  if (use_adam) {
+    optimizer_adam <- optim_adam(params, lr=adam_lr)
+    scheduler_adam <- lr_multiplicative(
+      optimizer_adam,
+      lr_lambda=function(epoch) lr_decay
+    )
+    for (epoch in seq_len(adam_epochs)) {
+      optimizer_adam$zero_grad()
+      lv <- fn()
+      lv$backward()
+      if (clip_grad) {
+        nn_utils_clip_grad_norm_(params, max_norm=2)
+      }
+      optimizer_adam$step()
+      scheduler_adam$step()
+      if (epoch %% 10 == 0 || epoch==adam_epochs) {
+        cat(sprintf("   [Adam epoch %d] loss=%.6f\n", epoch, lv$item()))
+      }
+    }
+  }
+
+  # 8) L-BFGS (optional)
+  lbfgs_losses <- numeric(0)
+  if (use_lbfgs) {
+    optimizer_lbfgs <- optim_lbfgs(
+      params = params,
+      lr = lbfgs_lr,
+      max_iter = lbfgs_max_iter,
+      history_size = 10,
+      line_search_fn = "strong_wolfe"
+    )
+    scheduler_lbfgs <- lr_multiplicative(
+      optimizer_lbfgs,
+      lr_lambda=function(epoch) lr_decay
+    )
+    lbfgs_losses <- numeric(lbfgs_epochs)
+
+    for (epoch in seq_len(lbfgs_epochs)) {
+      closure <- function() {
+        optimizer_lbfgs$zero_grad()
+        lv <- fn()
+        lv$backward()
+        lv
+      }
+      lv_val <- optimizer_lbfgs$step(closure)
+      scheduler_lbfgs$step()
+      lbfgs_losses[epoch] <- as.numeric(lv_val$item())
+      cat(sprintf("   [LBFGS epoch %d] loss=%.6f\n", epoch, lbfgs_losses[epoch]))
+    }
+  }
+
+  # Final
+  final_loss <- as.numeric(fn()$item())
+
+  # Extract final B, A
+  B_est <- (B_params$view(c(p,p)) * maskB_t)
+  A_est <- (A_params$view(c(p,k)) * maskA_t)
+
+  current_result <- list(
+    B_est       = B_est,
+    A_est       = A_est,
+    net         = nnets,
+    final_loss  = final_loss,
+    lbfgs_losses= lbfgs_losses
+  )
+  all_runs[[run_idx]] <- current_result
+  if (final_loss < best_loss) {
+    best_loss   <- final_loss
+    best_result <- current_result
+  }
+} # end for run_idx
+
+list(best_result=best_result, all_runs=all_runs)
+}
