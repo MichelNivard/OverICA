@@ -576,6 +576,69 @@ torch_unique_4th_central_moments <- function(X) {
   out
 }
 
+#' Compute Unique 4th, 3rd, and 2nd Central Moments
+#'
+#' For data X of shape (n, p), each column is first centered by subtracting its mean.
+#' This function computes the unique central moments:
+#' - 4th-order moments: E[(X_i - mu_i)(X_j - mu_j)(X_k - mu_k)(X_l - mu_l)] for i <= j <= k <= l
+#' - 3rd-order moments: E[(X_i - mu_i)(X_j - mu_j)(X_k - mu_k)] for i <= j <= k
+#' - 2nd-order moments: E[(X_i - mu_i)(X_j - mu_j)] for i <= j
+#'
+#' The results are concatenated into a single 1D torch tensor in the order of 4th, 3rd, and 2nd-order moments.
+#'
+#' @param X A torch tensor of shape (n, p).
+#' @return A 1D torch tensor containing all unique moments, concatenated in the order of:
+#'   - 4th-order moments
+#'   - 3rd-order moments
+#'   - 2nd-order moments
+#' @export
+torch_unique_234th_central_moments <- function(X) {
+  n <- X$size(1)
+  p <- X$size(2)
+
+  # Center the data
+  means <- X$mean(dim = 1)             # shape (p)
+  Xc <- X - means$view(c(1, p))        # shape (n, p)
+
+  # Compute 4th-order moments
+  combos_4th <- combn(p, 4, simplify = FALSE)
+  out_4th <- torch_zeros(length(combos_4th), device = X$device)
+  for (idx in seq_along(combos_4th)) {
+    indices <- combos_4th[[idx]]
+    prod_ijkl <- Xc[, indices[1]] *
+                 Xc[, indices[2]] *
+                 Xc[, indices[3]] *
+                 Xc[, indices[4]]
+    out_4th[idx] <- prod_ijkl$mean()
+  }
+
+  # Compute 3rd-order moments
+  combos_3rd <- combn(p, 3, simplify = FALSE)
+  out_3rd <- torch_zeros(length(combos_3rd), device = X$device)
+  for (idx in seq_along(combos_3rd)) {
+    indices <- combos_3rd[[idx]]
+    prod_ijk <- Xc[, indices[1]] *
+                Xc[, indices[2]] *
+                Xc[, indices[3]]
+    out_3rd[idx] <- prod_ijk$mean()
+  }
+
+  # Compute 2nd-order moments
+  combos_2nd <- combn(p, 2, simplify = FALSE)
+  out_2nd <- torch_zeros(length(combos_2nd), device = X$device)
+  for (idx in seq_along(combos_2nd)) {
+    indices <- combos_2nd[[idx]]
+    prod_ij <- Xc[, indices[1]] *
+               Xc[, indices[2]]
+    out_2nd[idx] <- prod_ij$mean()
+  }
+
+  # Concatenate all moments into a single vector
+  torch_cat(list(out_4th, out_3rd, out_2nd))
+}
+
+
+
 
 #' OverICA with Structural (I - B)^{-1}, Overcomplete Latent s, and Optional Error
 #'
@@ -744,6 +807,9 @@ for (run_idx in seq_len(num_runs)) {
 
     # s
     s_val <- nnets(z_fixed)  # (n_batch, k)
+    
+    s_val <-  s_val - torch_mean(s_val)
+
 
     # s %*% A => (n_batch, p)
     SA <- s_val$matmul(A_mat$t())
