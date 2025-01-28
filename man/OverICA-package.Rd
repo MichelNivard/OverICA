@@ -4,9 +4,9 @@
 \name{OverICA-package}
 \alias{OverICA}
 \alias{OverICA-package}
-\title{OverICA: Overcomplete Independent component analysis using generative adverserial networks and generalized covariance loss.}
+\title{OverICA: Overcomplete Independent component analysis using generative adverserial networks, based on kurtosis or generalized covariance loss.}
 \description{
-Provides functions to estiamte Overcomplete Independent componentn analysis, using Torch and aloss funciton based on Empirical Cumulant Generating Functions (ECGF). The package includes utilities for generating non-Gaussian data, aligning estimated parameters with true parameters using the Hungarian algorithm, and optimizing parameters in torch using the Adam and L-BFGS optimizers. The package further has facilities to average multiple runs minimize error in component recovery.
+Provides functions to estiamte Overcomplete Independent componentn analysis, using Torch and two loss functions based on Empirical Cumulant Generating Functions (ECGF) and on Kurtosis. The package includes utilities for generating non-Gaussian data, aligning estimated parameters with true parameters using the Hungarian algorithm, and optimizing parameters in torch using the Adam and L-BFGS optimizers. The package further has facilities to average multiple runs minimize error in component recovery.
 }
 \author{
 \strong{Maintainer}: Michel Nivard \email{m.g.nivard@bristol.ac.uk}

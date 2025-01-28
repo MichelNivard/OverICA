@@ -543,37 +543,60 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 #' Then for each 1 <= i <= j <= k <= l <= p, we compute
 #'     E[ (X_i - mu_i) (X_j - mu_j) (X_k - mu_k) (X_l - mu_l) ].
 #'
-#' This yields a total of choose(p+3, 4) distinct moments (a 1D torch vector).
+#' This yields a total of alll distinct moments (a 1D torch vector).
 #'
 #' @param X A torch tensor of shape (n, p).
-#' @return A 1D torch tensor of length choose(p+3, 4).
+#' @return A 1D torch tensor of moments
 #' @export
-torch_unique_4th_central_moments <- function(X) {
+torch_unique_234th_central_moments <- function(X) {
   n <- X$size(1)
   p <- X$size(2)
-
+  
   # Center the data
-  means <- X$mean(dim = 1)             # shape (p)
-  Xc <- X - means$view(c(1, p))        # shape (n, p)
-
-  # Generate combinations (i, j, k, l) with repetition
-  combos <- combn(p, 4, simplify = FALSE)
-
-  # Prepare output
-  out_len <- length(combos)
-  out <- torch_zeros(out_len, device = X$device)
-
-  # Compute the moments
-  for (idx in seq_along(combos)) {
-    indices <- combos[[idx]]
-    prod_ijkl <- Xc[, indices[1]] *
-                 Xc[, indices[2]] *
-                 Xc[, indices[3]] *
-                 Xc[, indices[4]]    # shape (n)
-    out[idx] <- prod_ijkl$mean()      # Compute mean for this combination
+  means <- X$mean(dim = 1)
+  Xc <- X - means$view(c(1, p))
+  
+  # Initialize lists for storing unique moments
+  out_2nd <- list()
+  out_3rd <- list()
+  out_4th <- list()
+  
+  # Compute 2nd-order moments (unique pairs, including variances)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      moment <- (Xc[, i] * Xc[, j])$mean()
+      out_2nd[[length(out_2nd) + 1]] <- moment
+    }
   }
-
-  out
+  
+  # Compute 3rd-order moments (unique triplets)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      for (k in j:p) { # Ensure k >= j
+        moment <- (Xc[, i] * Xc[, j] * Xc[, k])$mean()
+        out_3rd[[length(out_3rd) + 1]] <- moment
+      }
+    }
+  }
+  
+  # Compute 4th-order moments (unique quadruplets)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      for (k in j:p) { # Ensure k >= j
+        for (l in k:p) { # Ensure l >= k
+          moment <- (Xc[, i] * Xc[, j] * Xc[, k] * Xc[, l])$mean()
+          out_4th[[length(out_4th) + 1]] <- moment
+        }
+      }
+    }
+  }
+  
+  # Concatenate all moments into a single vector
+  torch_cat(c(
+    torch_stack(out_2nd), 
+    torch_stack(out_3rd), 
+    torch_stack(out_4th)
+  ))
 }
 
 #' Compute Unique 4th, 3rd, and 2nd Central Moments
@@ -595,49 +618,109 @@ torch_unique_4th_central_moments <- function(X) {
 torch_unique_234th_central_moments <- function(X) {
   n <- X$size(1)
   p <- X$size(2)
-
+  
   # Center the data
-  means <- X$mean(dim = 1)             # shape (p)
-  Xc <- X - means$view(c(1, p))        # shape (n, p)
-
-  # Compute 4th-order moments
-  combos_4th <- combn(p, 4, simplify = FALSE)
-  out_4th <- torch_zeros(length(combos_4th), device = X$device)
-  for (idx in seq_along(combos_4th)) {
-    indices <- combos_4th[[idx]]
-    prod_ijkl <- Xc[, indices[1]] *
-                 Xc[, indices[2]] *
-                 Xc[, indices[3]] *
-                 Xc[, indices[4]]
-    out_4th[idx] <- prod_ijkl$mean()
+  means <- X$mean(dim = 1)
+  Xc <- X - means$view(c(1, p))
+  
+  # Initialize lists for storing unique moments
+  out_2nd <- list()
+  out_3rd <- list()
+  out_4th <- list()
+  
+  # Compute 2nd-order moments (unique pairs, including variances)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      moment <- (Xc[, i] * Xc[, j])$mean()
+      out_2nd[[length(out_2nd) + 1]] <- moment
+    }
   }
-
-  # Compute 3rd-order moments
-  combos_3rd <- combn(p, 3, simplify = FALSE)
-  out_3rd <- torch_zeros(length(combos_3rd), device = X$device)
-  for (idx in seq_along(combos_3rd)) {
-    indices <- combos_3rd[[idx]]
-    prod_ijk <- Xc[, indices[1]] *
-                Xc[, indices[2]] *
-                Xc[, indices[3]]
-    out_3rd[idx] <- prod_ijk$mean()
+  
+  # Compute 3rd-order moments (unique triplets)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      for (k in j:p) { # Ensure k >= j
+        moment <- (Xc[, i] * Xc[, j] * Xc[, k])$mean()
+        out_3rd[[length(out_3rd) + 1]] <- moment
+      }
+    }
   }
-
-  # Compute 2nd-order moments
-  combos_2nd <- combn(p, 2, simplify = FALSE)
-  out_2nd <- torch_zeros(length(combos_2nd), device = X$device)
-  for (idx in seq_along(combos_2nd)) {
-    indices <- combos_2nd[[idx]]
-    prod_ij <- Xc[, indices[1]] *
-               Xc[, indices[2]]
-    out_2nd[idx] <- prod_ij$mean()
+  
+  # Compute 4th-order moments (unique quadruplets)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      for (k in j:p) { # Ensure k >= j
+        for (l in k:p) { # Ensure l >= k
+          moment <- (Xc[, i] * Xc[, j] * Xc[, k] * Xc[, l])$mean()
+          out_4th[[length(out_4th) + 1]] <- moment
+        }
+      }
+    }
   }
-
+  
   # Concatenate all moments into a single vector
-  torch_cat(list(out_4th, out_3rd, out_2nd))
+  torch_cat(c(
+    torch_stack(out_2nd), 
+    torch_stack(out_3rd), 
+    torch_stack(out_4th)
+  ))
 }
 
 
+#' Compute Unique 4th,  and 2nd Central Moments
+#'
+#' For data X of shape (n, p), each column is first centered by subtracting its mean.
+#' This function computes the unique central moments:
+#' - 4th-order moments: E[(X_i - mu_i)(X_j - mu_j)(X_k - mu_k)(X_l - mu_l)] for i <= j <= k <= l
+#' - 2nd-order moments: E[(X_i - mu_i)(X_j - mu_j)] for i <= j
+#'
+#' The results are concatenated into a single 1D torch tensor in the order of 4th and 2nd-order moments.
+#'
+#' @param X A torch tensor of shape (n, p).
+#' @return A 1D torch tensor containing all unique moments, concatenated in the order of:
+#'   - 4th-order moments
+#'   - 2nd-order moments
+#' @export
+torch_unique_24th_central_moments <- function(X) {
+  n <- X$size(1)
+  p <- X$size(2)
+  
+  # Center the data
+  means <- X$mean(dim = 1)
+  Xc <- X - means$view(c(1, p))
+  
+  # Initialize lists for storing unique moments
+  out_2nd <- list()
+  out_3rd <- list()
+  out_4th <- list()
+  
+  # Compute 2nd-order moments (unique pairs, including variances)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      moment <- (Xc[, i] * Xc[, j])$mean()
+      out_2nd[[length(out_2nd) + 1]] <- moment
+    }
+  }
+  
+  
+  # Compute 4th-order moments (unique quadruplets)
+  for (i in seq_len(p)) {
+    for (j in i:p) { # Ensure j >= i
+      for (k in j:p) { # Ensure k >= j
+        for (l in k:p) { # Ensure l >= k
+          moment <- (Xc[, i] * Xc[, j] * Xc[, k] * Xc[, l])$mean()
+          out_4th[[length(out_4th) + 1]] <- moment
+        }
+      }
+    }
+  }
+  
+  # Concatenate all moments into a single vector
+  torch_cat(c(
+    torch_stack(out_2nd), 
+    torch_stack(out_4th)
+  ))
+}
 
 
 #' OverICA with Structural (I - B)^{-1}, Overcomplete Latent s, and Optional Error
@@ -724,11 +807,9 @@ if (is.null(maskA)) maskA <- matrix(1, p, k)
 maskB_t <- torch_tensor(maskB, dtype=torch_float(), device=device)$detach()
 maskA_t <- torch_tensor(maskA, dtype=torch_float(), device=device)$detach()
 
-# 3) Optional known error: factor it if provided
-L_error <- NULL
+# 3) Optional known error
 if (!is.null(error_cov)) {
   cov_t <- torch_tensor(error_cov, dtype=torch_float(), device=device)
-  L_error <- cov_t$cholesky(upper=FALSE)
 }
 
 # A small net to produce s from z
@@ -787,8 +868,9 @@ for (run_idx in seq_len(num_runs)) {
   # 5) Sample z ~ Normal(0,I), and maybe e
   z_fixed <- torch_randn(c(n_batch, k), device=device)
   e_fixed <- NULL
-  if (!is.null(L_error)) {
-    e_fixed <- torch_randn(c(n_batch, p), device=device)$matmul(L_error$t())
+  if (!is.null(error_cov)) {
+    e_dist <- distr_multivariate_normal(torch_zeros(p), cov_t)
+    e_fixed <- e_dist$sample(n_batch)
   }
 
   # 6) Define the forward/loss
@@ -825,7 +907,7 @@ for (run_idx in seq_len(num_runs)) {
     # compute model's statistic
     model_stat <- moment_func(data_hat)
     diff <- model_stat - obs_stat
-    loss_stat <- torch_sum(diff * diff)
+    loss_stat <- torch_mean(diff * diff)
 
     # L1 penalties
     loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat))

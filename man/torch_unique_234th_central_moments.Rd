@@ -2,14 +2,18 @@
 % Please edit documentation in R/functions.R
 \name{torch_unique_234th_central_moments}
 \alias{torch_unique_234th_central_moments}
-\title{Compute Unique 4th, 3rd, and 2nd Central Moments}
+\title{Compute Unique 4th-Order Central Moments (i <= j <= k <= l)}
 \usage{
+torch_unique_234th_central_moments(X)
+
 torch_unique_234th_central_moments(X)
 }
 \arguments{
 \item{X}{A torch tensor of shape (n, p).}
 }
 \value{
+A 1D torch tensor of moments
+
 A 1D torch tensor containing all unique moments, concatenated in the order of:
 \itemize{
 \item 4th-order moments
@@ -18,6 +22,10 @@ A 1D torch tensor containing all unique moments, concatenated in the order of:
 }
 }
 \description{
+For data X of shape (n, p), we first center each column, i.e. X_centered\link{,i} = X\link{,i} - mean_i.
+Then for each 1 <= i <= j <= k <= l <= p, we compute
+E\link{ (X_i - mu_i) (X_j - mu_j) (X_k - mu_k) (X_l - mu_l) }.
+
 For data X of shape (n, p), each column is first centered by subtracting its mean.
 This function computes the unique central moments:
 \itemize{
@@ -27,5 +35,7 @@ This function computes the unique central moments:
 }
 }
 \details{
+This yields a total of alll distinct moments (a 1D torch vector).
+
 The results are concatenated into a single 1D torch tensor in the order of 4th, 3rd, and 2nd-order moments.
 }
