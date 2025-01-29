@@ -8,6 +8,7 @@ overica_sem_full(
   data,
   k,
   moment_func,
+  third = TRUE,
   error_cov = NULL,
   maskB = NULL,
   maskA = NULL,
@@ -35,6 +36,8 @@ overica_sem_full(
 
 \item{moment_func}{A function that takes a (n_batch x p) torch tensor and returns
 a 1D torch tensor of statistics to match. (e.g. \code{torch_unique_4th_central_moments}).}
+
+\item{third}{A logical the specifies whether third order moments are to be considered in the loss}
 
 \item{error_cov}{An optional (p x p) covariance for Gaussian noise e. If NULL, no error added.}
 
