@@ -159,7 +159,7 @@ extract_covariance_and_kurtosis <- function(moments, indices,p, third=TRUE) {
     k <- indices$indices_4th[idx, 3]$item() 
     l <- indices$indices_4th[idx, 4]$item() 
     if (i == j && j == k && k == l) {  # Extract diagonal elements (self-kurtosis)
-      kurtosis[i] <- moments[start_4th + idx - 1]
+      kurtosis[i] <- moments[start_4th + idx]
     }
   }
 

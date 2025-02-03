@@ -823,8 +823,17 @@ for (run_idx in seq_len(num_runs)) {
       # data_hat = M %*% SA^T, then transpose => shape (n_batch, p)
       # i.e. each row is M times the row of SA
       data_hat_l <- M$matmul(SA$t())$t()
-
-
+      
+    if (!is.null(e_fixed)) {
+      data_hat <- data_hat_l + e_fixed
+    }else{
+      data_hat <-  data_hat_l
+    }
+  
+      model_stat <- moment_func(data_hat,indices,third)
+      diff <- model_stat - obs_stat
+      loss_stat <- torch_mean(diff * diff)
+  
   moments <- moment_func(data_hat_l,indices,third)
   out <-  extract_covariance_and_kurtosis(moments,indices,p,third)
   current_result <- list(
@@ -833,6 +842,7 @@ for (run_idx in seq_len(num_runs)) {
     moments     = out,
     net         = nnets,
     final_loss  = final_loss,
+    raw_loss    = loss_stat,
     lbfgs_losses= lbfgs_losses
   )
   all_runs[[run_idx]] <- current_result
