@@ -1,120 +1,3 @@
-#' Align Estimated and True Matrices Using the Hungarian Algorithm
-#'
-#' This function aligns the columns of an estimated matrix with those of the true matrix by maximizing the absolute correlation between columns using the Hungarian algorithm.
-#'
-#' @param D_est A numeric matrix of estimated components (n x k).
-#' @param D_true A numeric matrix of true components (n x k).
-#' @return A numeric matrix with columns of \code{D_est} aligned to \code{D_true}.
-#' @importFrom clue solve_LSAP
-#' @export
-#' @examples
-#' # Assuming D_est and D_true are matrices
-#' D_aligned <- align_columns(D_est, D_true)
-align_columns <- function(D_est, D_true) {
-  k <- ncol(D_true)
-  cost_matrix <- matrix(0, nrow = k, ncol = k)
-  for (i in 1:k) {
-    for (j in 1:k) {
-      cost_matrix[i, j] <- abs(cor(D_true[, i], D_est[, j]))
-    }
-  }
-  assignment <- solve_LSAP(cost_matrix, maximum = TRUE)
-  D_est_aligned <- D_est[, assignment]
-
-  correlations <- diag(cor(D_est_aligned, D_true))
-  print(correlations)
-  print(sum(abs(correlations) > .9))
-
-  for (i in 1:ncol(D_est_aligned)) {
-    D_est_aligned[, i] <- sign(correlations[i]) * D_est_aligned[, i]
-  }
-
-  return(D_est_aligned)
-}
-
-#' Compute Empirical Cumulative Generating Function (ECGF) and its Derivatives
-#'
-#' This function calculates the Empirical Cumulative Generating Function (ECGF) and its first
-#' and second derivatives using a batch of data. It is designed to work with torch tensors.
-#'
-#' @param t_vectors A tensor of shape \code{(num_t_vals, p)}, where \code{num_t_vals} is the number of t-values and \code{p} is the dimensionality.
-#' @param data_tensor A tensor of shape \code{(n, p)}, where \code{n} is the number of data points and \code{p} is the dimensionality.
-#'
-#' @return A list containing:
-#' \item{K}{A tensor of shape \code{(num_t_vals)} representing the ECGF values.}
-#' \item{dK}{A tensor of shape \code{(num_t_vals, p)} representing the first derivative of the ECGF.}
-#' \item{d2K}{A tensor of shape \code{(num_t_vals, p, p)} representing the second derivative of the ECGF.}
-#'
-#' @details
-#' The function computes the ECGF using the dot product between the data tensor and t-vectors, followed by the calculation of log-sum-exp for numerical stability.
-#' The first derivative \code{dK} is obtained using weighted averages of the data points. The second derivative \code{d2K} is computed through a batch of weighted centered data products.
-#'
-#' @examples
-#' \dontrun{
-#' # Assume torch and appropriate tensors are loaded
-#' t_vectors <- torch_randn(c(5, 3)) # 5 t-values, 3-dimensional space
-#' data_tensor <- torch_randn(c(100, 3)) # 100 data points, 3-dimensional space
-#' result <- torch_ecgf_batch(t_vectors, data_tensor)
-#' print(result$K)  # ECGF values
-#' print(result$dK) # First derivative
-#' print(result$d2K) # Second derivative
-#' }
-#'
-#' @export
-torch_ecgf_batch <- function(t_vectors, data_tensor) {
-  # t_vectors: (num_t_vals x p)
-  # data_tensor: (n x p)
-
-  num_t_vals <- t_vectors$size(1)
-  n <- data_tensor$size(1)
-  p <- data_tensor$size(2)
-
-  # Compute the dot product between data and t_vectors
-  dot_product <- data_tensor$matmul(t_vectors$transpose(1, 2))  # (n x num_t_vals)
-
-  # Compute K_t
-  K_t <- torch_logsumexp(dot_product, dim = 1) - log(n)  # (num_t_vals)
-
-  # Compute log weights for numerical stability
-  log_weights <- dot_product - torch_logsumexp(dot_product, dim = 1, keepdim = TRUE)  # (n x num_t_vals)
-  weights <- torch_exp(log_weights)  # (n x num_t_vals)
-
-  # Compute first derivative dK
-  # Expand weights to (n x num_t_vals x 1)
-  weights_expanded <- weights$unsqueeze(3)  # (n x num_t_vals x 1)
-
-  # Expand data_tensor to (n x 1 x p)
-  data_expanded <- data_tensor$unsqueeze(2)  # (n x 1 x p)
-
-  # Multiply and sum over n
-  data_weighted <- weights_expanded * data_expanded  # (n x num_t_vals x p)
-
-  # Sum over n
-  dK <- torch_sum(data_weighted, dim = 1)  # (num_t_vals x p)
-
-  # Compute second derivative d2K
-  # Expand dK to (1 x num_t_vals x p)
-  dK_expanded <- dK$unsqueeze(1)  # (1 x num_t_vals x p)
-
-  data_centered <- data_expanded - dK_expanded  # (n x num_t_vals x p)
-
-  # Compute weighted_data_centered
-  weighted_data_centered <- weights_expanded * data_centered  # (n x num_t_vals x p)
-
-  # Compute d2K using batched matrix multiplication
-  # Permute dimensions to (num_t_vals x n x p)
-  data_centered_per_t <- data_centered$permute(c(2, 1, 3))  # (num_t_vals x n x p)
-  weighted_data_centered_per_t <- weighted_data_centered$permute(c(2, 1, 3))  # (num_t_vals x n x p)
-
-  # Transpose weighted_data_centered_per_t to (num_t_vals x p x n)
-  weighted_centered_transposed <- weighted_data_centered_per_t$transpose(2, 3)  # (num_t_vals x p x n)
-
-  # Compute d2K_batch using torch_bmm
-  d2K_batch <- torch_bmm(weighted_centered_transposed, data_centered_per_t)  # (num_t_vals x p x p)
-
-  return(list(K = K_t, dK = dK, d2K = d2K_batch))
-}
-
 
 
 #' Estimate an Overcomplete Independent Component Analysis (OICA) Using Torch and Empirical Cumulant Generating Functions
@@ -147,7 +30,7 @@ torch_ecgf_batch <- function(t_vectors, data_tensor) {
 #' @examples
 #' # Assuming 'data' is a matrix of observed data
 #' result <- overica(data, k = 5, num_runs = 10)
-overica <- function(
+overica.gcov <- function(
     data,
     k,
     num_t_vals = 8,
@@ -428,119 +311,10 @@ generate_matrix <- function(n, k) {
 
   return(matrix_data)
 }
-#' Average Multiple OICA Runs to Obtain a Consensus Mixing Matrix
-#'
-#' This function averages the estimated mixing matrices from multiple runs of the `overica` function.
-#' It aligns components across runs, accounting for sign ambiguity inherent in ICA, by clustering the
-#' components and combining sign-flipped versions to obtain a consensus mixing matrix.
-#'
-#' @param result A list object returned by the `overica` function with multiple runs, containing the estimated mixing matrices.
-#' @param num_runs An integer specifying the number of runs.
-#' @param p An integer specifying the number of observed variables.
-#' @param k An integer specifying the number of latent variables.
-#' @param maxit Maximum number of iterations for the constrained clustering algorithm
-#' @return A matrix representing the averaged mixing matrix after aligning and averaging over runs.
-#' @importFrom stats density cor
-#' @importFrom dplyr distinct
-#' @examples
-#' \dontrun{
-#' # Assuming 'result' is the output from overica with multiple runs
-#' p <- ncol(data)
-#' k <- 5
-#' num_runs <- 10
-#' averaged_A <- avgOICAruns(result, num_runs, p, k)
-#' }
-#' @export
-avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
-
-  # Retrieve the estimated A matrix from the best result
-  A_est <- as.matrix(result$best_result$A_est, p, k)
-
-  # Initialize A_base with the A matrix from the first run
-  A_base <- as.matrix(result$all_runs[[1]]$A_est, p, k)
-  A_base <- cbind(align_columns(as.matrix(result$all_runs[[2]]$A_est, p, k),A_base),A_base)
-  # Loop through the remaining runs and append each A matrix to A_base
-  for (i in 3:num_runs) {
-    A_new <- result$all_runs[[i]]$A_est
-    A_base <- cbind(as.matrix(A_new, p, k), A_base)
-  }
-
-  # Combine A_base with its negated version to allow for sign-flip ambiguity
-  A_base <- cbind(A_base, -1 * A_base)
-
-  # Transpose A_base for further analysis
-  A_base_t <- t(A_base)
-
-  # Function to compute the mode of a continuous variable using Kernel Density Estimation (KDE)
-  mode_kde <- function(x, bw = "nrd0") {
-    # Ensure x is numeric and remove NA values
-    x <- na.omit(as.numeric(x))
-
-    # Estimate the density of x using the specified bandwidth method
-    dens <- density(x, bw = bw)
-
-    # Find the mode by locating the point with the highest density
-    mode_value <- dens$x[which.max(dens$y)]
-
-    return(mode_value)
-  }
-
-  # Set dimensions for clustering and merging process
-  k2 <- 2 * k
-  nr2 <- 2 * num_runs
-
-  # Create matrix of pairwise indices for the clustering process
-  a <- cbind(rep(1:k, k2), rep(1:k, each = k2))
-  for (i in 2:nr2) {
-    a <- rbind(a, cbind(rep(((i - 1) * k + 1):(i * k), k2), rep(((i - 1) * k + 1):(i * k), each = k2)))
-  }
-
-  # Perform clustering using the ckmeans algorithm with mustLink and cantLink constraints
-  clust <- ckmeans(A_base_t, mustLink = matrix(c(1, k + 1), nrow = 1), cantLink = a, k = k2, maxIter = maxit)
-
-  # Initialize a matrix to store the median of the clustered A matrix
-  A_med <- matrix(NA, p, k2)
-
-  # Compute the mode for each cluster and store it in A_med
-  for (i in 1:k2) {
-    A_med[,i] <- apply(A_base_t[clust == i,], 2, median)
-  }
-
-  # Calculate the correlation matrix of A_med to identify loadings with high correlations
-  cor <- cor(A_med)
-  pairs <- matrix(NA, k2, 2)
-
-  # Find pairs of loadings with the smallest correlation and store their indices
-  for (i in 1:k2) {
-    w <- which(cor[,i] == min(cor[,i]))
-    pairs[i,] <- c(w, i)
-  }
-
-  # Generate a unique index for each pair and remove duplicates
-  index <- pairs[,1] * pairs[,2]
-  pairs <- cbind.data.frame(pairs, index)
-  pairs <- distinct(pairs, index, .keep_all = TRUE)
-
-  # Remove pairs where the two indices are equal (no need to merge identical components)
-  pairs <- pairs[pairs[,1] != pairs[,2],]
-
-  # Initialize matrix to store the merged median A matrix
-  A_med_merge <- matrix(NA, nrow = p, ncol = k)
-
-  # Merge the most correlated pairs by averaging them, adjusting for sign flips
-  for (i in 1:k) {
-    A_med_merge[,i] <- (A_med[,pairs[i,1]] + -1 * A_med[,pairs[i,2]]) / 2
-  }
-
-  # Return the final merged matrix of median loadings
-  out <- list(A_med = A_med_merge,A_all = A_base_t)
-  return(out)
-}
 
 
 
-
-#' OverICA with Structural (I - B)^{-1}, Overcomplete Latent s, and Optional Error
+#' OverICA with Structural (I - B)^{-1}, Overcomplete Latent s, and Optional Error. Estimation based on higher order moments.
 #'
 #' This function implements a model:
 #'   data_hat = (I - B)^(-1) (s %*% A) + e
@@ -564,7 +338,7 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 #' @param error_cov An optional (p x p) covariance for Gaussian noise e. If NULL, no error added.
 #' @param maskB Optional p x p binary mask for B. 1 => estimate the entry, 0 => fix to 0.
 #' @param maskA Optional p x k binary mask for A. 1 => estimate, 0 => fix to 0.
-#' @param lambdaA L1 penalty on A.
+#' @param lambdaA L1 penalty on A, only penalizes overcomplete latent variables where p < k (i.e leaves the unique residuals untouched).
 #' @param lambdaB L1 penalty on B.
 #' @param sigma Covariance penalty weight for the sources s (to encourage whitening).
 #' @param hidden_size Number of hidden units in the small MLP that maps z->s.
@@ -586,7 +360,7 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 #'
 #' @import torch
 #' @export
-overica_sem_full <- function(
+overica.moments.sem <- function(
   data,
   k,
   moment_func,
@@ -734,7 +508,12 @@ for (run_idx in seq_len(num_runs)) {
     loss_stat <- torch_mean(diff * diff)
 
     # L1 penalties
-    loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat))
+    if(p < k){
+    loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat[,1:(k-p)]))
+    } else{
+      loss_l1A <- 0 
+    }
+
     loss_l1B <- lambdaB * torch_sum(torch_abs(B_mat))
 
     # Cov penalty on s
@@ -742,7 +521,7 @@ for (run_idx in seq_len(num_runs)) {
 
     loss <- loss_stat + loss_l1A + loss_l1B + loss_cov
     loss
-  }
+    }
 
   # 7) Adam (optional)
   if (use_adam) {
@@ -853,4 +632,138 @@ for (run_idx in seq_len(num_runs)) {
 } # end for run_idx
 
 list(best_result=best_result, all_runs=all_runs)
+}
+
+#' Grid Search over L1 Penalties for OverICA SEM
+#'
+#' This function performs a grid search over the L1 penalty hyperparameters for matrices A and B
+#' in an OverICA SEM model. The underlying estimation function (e.g. \code{overica.moments.sem})
+#' is called repeatedly with candidate penalty values. In the first iteration, candidate values
+#' span one order of magnitude up and down from the initial values. In subsequent iterations,
+#' the grid is refined using multiplicative factors of 0.5, 1, and 2 around the current best.
+#' The candidate pair with the lowest final loss is selected and used as the center for the next iteration.
+#'
+#' @param data A numeric matrix of observed data (n x p).
+#' @param k Number of latent sources.
+#' @param moment_func A function that takes a torch tensor (n_batch x p), along with moment indices
+#'        and a logical flag for third order moments, and returns a 1D torch tensor of computed moments.
+#' @param error_cov Optional (p x p) covariance matrix for noise. If NULL, no error is added.
+#' @param maskB Optional binary mask (p x p) for matrix B. A 1 indicates the entry is estimated,
+#'        and a 0 forces the entry to 0.
+#' @param maskA Optional binary mask (p x k) for matrix A. A 1 indicates the entry is estimated,
+#'        and a 0 forces the entry to 0.
+#' @param sigma Covariance penalty weight for the latent sources s (to encourage whitening).
+#' @param third Do we consider the third moments, dont use if your distributions are suposed to be symetric. 
+#' @param hidden_size Number of hidden units in the neural network that maps z to s.
+#' @param n_batch Batch size for the random z draws.
+#' @param use_adam Logical; whether to run the Adam optimizer.
+#' @param adam_epochs Number of epochs for Adam.
+#' @param adam_lr Learning rate for Adam.
+#' @param use_lbfgs Logical; whether to run the L-BFGS optimizer after Adam.
+#' @param lbfgs_epochs Number of epochs for L-BFGS.
+#' @param lbfgs_lr Learning rate for L-BFGS.
+#' @param lbfgs_max_iter Maximum iterations per L-BFGS step.
+#' @param lr_decay Multiplicative learning rate decay per epoch (set to 1 for no decay).
+#' @param clip_grad Logical; whether to clip gradients.
+#' @param num_runs Number of random restarts for the estimation.
+#' @param initial_lambdaA Initial L1 penalty for matrix A.
+#' @param initial_lambdaB Initial L1 penalty for matrix B.
+#' @param num_iter Number of grid search iterations.
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{best_result}{The best estimation result, including the final matrices A and B and the final loss.}
+#'   \item{best_lambdaA}{The best L1 penalty chosen for matrix A.}
+#'   \item{best_lambdaB}{The best L1 penalty chosen for matrix B.}
+#'   \item{grid_losses}{A matrix of final losses from the last iteration of the grid search.}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#'   # Assume 'data' is your observed data and 'torch_unique_24th_central_moments' is your moment function.
+#'   grid_res <- grid_search_overica(data = data, k = 5,
+#'                     moment_func = torch_central_moments,
+#'                     initial_lambdaA = 0.01, initial_lambdaB = 0.00,
+#'                     num_iter = 3)
+#'   cat("Best lambdaA:", grid_res$best_lambdaA, "\n")
+#'   cat("Best lambdaB:", grid_res$best_lambdaB, "\n")
+#' }
+#'
+#' @export
+grid_search_overica <- function(data, k, moment_func, error_cov = NULL, maskB = NULL, maskA = NULL,
+                                sigma = 0.01, third=TRUE, hidden_size = 10, n_batch = 1024,
+                                use_adam = TRUE, adam_epochs = 100, adam_lr = 0.01,
+                                use_lbfgs = TRUE, lbfgs_epochs = 50, lbfgs_lr = 1, lbfgs_max_iter = 20,
+                                lr_decay = 0.999, clip_grad = TRUE, num_runs = 1,
+                                initial_lambdaA = 0.01, initial_lambdaB = 0.00,
+                                num_iter = 3,threshold = 0.001,crit="AIC") {
+  device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
+  n <- nrow(data)
+  p <- ncol(data)
+  
+  best_lambdaA <- initial_lambdaA
+  best_lambdaB <- initial_lambdaB
+  best_loss <- Inf
+  best_result <- NULL
+  
+  # For the first iteration, search over one order of magnitude; then refine.
+  for (iter in seq_len(num_iter)) {
+
+      grid_factors <-  exp((1/iter) * log(c(0.25, 1, 4)))
+
+    
+    candidate_lambdaA <- best_lambdaA * grid_factors
+    candidate_lambdaB <- best_lambdaB * grid_factors
+    
+    grid_losses <- matrix(NA, nrow = length(candidate_lambdaA), ncol = length(candidate_lambdaB))
+    grid_results <- list()
+    
+    for (i in seq_along(candidate_lambdaA)) {
+      for (j in seq_along(candidate_lambdaB)) {
+        cat(sprintf("Trying lambdaA = %.5f, lambdaB = %.5f\n",
+                    candidate_lambdaA[i], candidate_lambdaB[j]))
+        
+        res <- overica.moments.sem(data = data, k = k, moment_func = moment_func,
+                                   third = third, error_cov = error_cov,
+                                   maskB = maskB, maskA = maskA,
+                                   lambdaA = candidate_lambdaA[i],
+                                   lambdaB = candidate_lambdaB[j],
+                                   sigma = sigma, hidden_size = hidden_size,
+                                   n_batch = n_batch,
+                                   use_adam = use_adam, adam_epochs = adam_epochs, adam_lr = adam_lr,
+                                   use_lbfgs = use_lbfgs, lbfgs_epochs = lbfgs_epochs, lbfgs_lr = lbfgs_lr,
+                                   lbfgs_max_iter = lbfgs_max_iter, lr_decay = lr_decay,
+                                   clip_grad = clip_grad, num_runs = num_runs)
+        loss_here <- as.numeric(res$best_result$raw_loss)
+        n_usable <- n
+        if(crit== "AIC"){
+        aic_val <- compute_AIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k, n_used = n_usable,threshold = threshold)$AIC
+        cat("Iteration completed with AIC:", aic_val,"\n")
+        grid_losses[i, j] <- aic_val
+        }
+        if(crit== "BIC"){
+          bic_val <- compute_BIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k, n_used = n_usable,threshold = threshold)$BIC
+          cat("Iteration completed with BIC:", bic_val,"\n")
+          grid_losses[i, j] <- bic_val
+          }
+        grid_results[[paste(i, j, sep = "_")]] <- res$best_result
+        }
+    }
+    
+    best_idx <- which(grid_losses == min(grid_losses), arr.ind = TRUE)
+    best_i <- best_idx[1, 1]
+    best_j <- best_idx[1, 2]
+    best_loss <- grid_losses[best_i, best_j]
+    best_lambdaA <- candidate_lambdaA[best_i]
+    best_lambdaB <- candidate_lambdaB[best_j]
+    best_result <- grid_results[[paste(best_i, best_j, sep = "_")]]
+    
+    cat(sprintf("Iteration %d best: lambdaA = %.5f, lambdaB = %.5f with loss = %.5f\n",
+                iter, best_lambdaA, best_lambdaB, best_loss))
+  }
+  
+  return(list(best_result = best_result,
+              best_lambdaA = best_lambdaA,
+              best_lambdaB = best_lambdaB,
+              grid_losses = grid_losses))
 }
