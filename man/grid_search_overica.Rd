@@ -29,7 +29,8 @@ grid_search_overica(
   initial_lambdaB = 0,
   num_iter = 3,
   threshold = 0.001,
-  crit = "AIC"
+  crit = "AIC",
+  grid_steps = c(0.25, 1, 4)
 )
 }
 \arguments{
@@ -81,6 +82,12 @@ and a 0 forces the entry to 0.}
 \item{initial_lambdaB}{Initial L1 penalty for matrix B.}
 
 \item{num_iter}{Number of grid search iterations.}
+
+\item{threshold}{Threashold at which to count a penalized parameter as zero (default is 0.001) for thr pseudo AIC or pseudo BIC}
+
+\item{crit}{Which criterion to use, pseudo AIC ("AIC") or pseudo BIC ("BIC").}
+
+\item{grid_steps}{Side of the innitial steps on the grid}
 }
 \value{
 A list containing:

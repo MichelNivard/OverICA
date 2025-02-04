@@ -669,6 +669,9 @@ list(best_result=best_result, all_runs=all_runs)
 #' @param initial_lambdaA Initial L1 penalty for matrix A.
 #' @param initial_lambdaB Initial L1 penalty for matrix B.
 #' @param num_iter Number of grid search iterations.
+#' @param threshold Threashold at which to count a penalized parameter as zero (default is 0.001) for thr pseudo AIC or pseudo BIC
+#' @param crit Which criterion to use, pseudo AIC ("AIC") or pseudo BIC ("BIC").
+#' @param grid_steps Side of the innitial steps on the grid
 #'
 #' @return A list containing:
 #' \describe{
@@ -696,7 +699,7 @@ grid_search_overica <- function(data, k, moment_func, error_cov = NULL, maskB = 
                                 use_lbfgs = TRUE, lbfgs_epochs = 50, lbfgs_lr = 1, lbfgs_max_iter = 20,
                                 lr_decay = 0.999, clip_grad = TRUE, num_runs = 1,
                                 initial_lambdaA = 0.01, initial_lambdaB = 0.00,
-                                num_iter = 3,threshold = 0.001,crit="AIC") {
+                                num_iter = 3,threshold = 0.001,crit="AIC",grid_steps = c(0.25,1,4)) {
   device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
   n <- nrow(data)
   p <- ncol(data)
@@ -709,7 +712,7 @@ grid_search_overica <- function(data, k, moment_func, error_cov = NULL, maskB = 
   # For the first iteration, search over one order of magnitude; then refine.
   for (iter in seq_len(num_iter)) {
 
-      grid_factors <-  exp((1/iter) * log(c(0.25, 1, 4)))
+      grid_factors <-  exp((1/iter) * log(grid_steps))
 
     
     candidate_lambdaA <- best_lambdaA * grid_factors
