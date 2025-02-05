@@ -437,7 +437,7 @@ compute_AIC <- function(raw_loss, A_est, B_est,k, threshold = 0.001,third=TRUE) 
   k_eff <- sum(abs(A_est) > threshold) + sum(abs(B_est) > threshold) 
   AIC_val <- n_moments * log(SSE / n_moments) + (2 * k_eff)
   
-  return(list(AIC = AIC_val, SSE = SSE, k_eff = k_eff))
+  return(list(AIC = AIC_val, SSE = SSE, k_eff = k_eff,n_moments=n_moments))
 }
 
 
@@ -481,5 +481,5 @@ compute_BIC <- function(raw_loss, A_est, B_est,k, threshold = 0.001,third=TRUE) 
   k_eff <- sum(abs(A_est) > threshold) + sum(abs(B_est) > threshold) 
   BIC_val <- n_moments  * log(SSE / n_moments)  + (log(n_moments) * k_eff)
   
-  return(list(BIC = BIC_val, SSE = SSE, k_eff = k_eff))
+  return(list(BIC = BIC_val, SSE = SSE, k_eff = k_eff,n_moments=n_moments))
 }

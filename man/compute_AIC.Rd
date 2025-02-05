@@ -4,7 +4,7 @@
 \alias{compute_AIC}
 \title{Compute pseudo AIC for an OLS-style reconstruction loss}
 \usage{
-compute_AIC(raw_loss, A_est, B_est, k, n_used, threshold = 0.001)
+compute_AIC(raw_loss, A_est, B_est, k, threshold = 0.001, third = TRUE)
 }
 \arguments{
 \item{raw_loss}{A numeric value representing the mean squared error (MSE) of the reconstruction.}
@@ -13,9 +13,11 @@ compute_AIC(raw_loss, A_est, B_est, k, n_used, threshold = 0.001)
 
 \item{B_est}{A torch tensor (or array) for the estimated matrix B.}
 
-\item{n_used}{Number of observations used in the loss calculation.}
-
 \item{threshold}{Numeric; entries smaller than this in absolute value are treated as zero.}
+
+\item{third}{Are third moments to be considered?}
+
+\item{n_used}{Number of observations used in the loss calculation.}
 }
 \value{
 A list with elements:
