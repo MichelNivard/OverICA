@@ -509,7 +509,7 @@ for (run_idx in seq_len(num_runs)) {
 
     # L1 penalties
     if(p < k){
-    loss_l1A <- lambdaA * torch_max(torch_sum(torch_abs(A_mat[,1:(k-p)]),1))
+    loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat[,1:(k-p)]))
     } else{
       loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat))
     }
