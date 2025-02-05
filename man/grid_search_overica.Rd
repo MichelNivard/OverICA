@@ -108,7 +108,7 @@ The candidate pair with the lowest final loss is selected and used as the center
 }
 \examples{
 \dontrun{
-  # Assume 'data' is your observed data and 'torch_unique_24th_central_moments' is your moment function.
+  # Assume 'data' is your observed data and 'torch__central_moments' is your moment function.
   grid_res <- grid_search_overica(data = data, k = 5,
                     moment_func = torch_central_moments,
                     initial_lambdaA = 0.01, initial_lambdaB = 0.00,

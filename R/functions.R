@@ -509,12 +509,12 @@ for (run_idx in seq_len(num_runs)) {
 
     # L1 penalties
     if(p < k){
-    loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat[,1:(k-p)]))
+    loss_l1A <- lambdaA * torch_max(torch_sum(torch_abs(A_mat[,1:(k-p)]),1))
     } else{
-      loss_l1A <- 0 
+      loss_l1A <- lambdaA * torch_sum(torch_abs(A_mat))
     }
 
-    loss_l1B <- lambdaB * torch_sum(torch_abs(B_mat))
+    loss_l1B <- lambdaB * torch_mean(torch_abs(B_mat))
 
     # Cov penalty on s
     loss_cov <- sigma * covariance_penalty(s_val)
@@ -683,7 +683,7 @@ list(best_result=best_result, all_runs=all_runs)
 #'
 #' @examples
 #' \dontrun{
-#'   # Assume 'data' is your observed data and 'torch_unique_24th_central_moments' is your moment function.
+#'   # Assume 'data' is your observed data and 'torch__central_moments' is your moment function.
 #'   grid_res <- grid_search_overica(data = data, k = 5,
 #'                     moment_func = torch_central_moments,
 #'                     initial_lambdaA = 0.01, initial_lambdaB = 0.00,
