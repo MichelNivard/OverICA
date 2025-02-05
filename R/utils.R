@@ -411,6 +411,7 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 #' @param B_est A torch tensor (or array) for the estimated matrix B.
 #' @param n_used Number of observations used in the loss calculation.
 #' @param threshold Numeric; entries smaller than this in absolute value are treated as zero.
+#' @param third Are third moments to be considered?
 #'
 #' @return A list with elements:
 #'   \item{AIC}{The computed AIC value.}
@@ -418,17 +419,23 @@ avgOICAruns <- function(result, num_runs, p, k,maxit=2000) {
 #'   \item{k_eff}{The effective number of parameters.}
 #'
 #' @export
-compute_AIC <- function(raw_loss, A_est, B_est,k, n_used, threshold = 0.001) {
+compute_AIC <- function(raw_loss, A_est, B_est,k, threshold = 0.001,third=TRUE) {
   # raw_loss is assumed to be the MSE (i.e. SSE/moments) 
   SSE <- raw_loss * ((k * (k-1))/2 + (k * (k-1) * (k-2)) /6  + (k * (k-1) * (k-2) * (k-3)) / 24)
-  
+
+  if(third==TRUE){
+    n_moments <- ((k * (k-1))/2 + (k * (k-1) * (k-2)) /6  + (k * (k-1) * (k-2) * (k-3)) / 24)
+  } else{
+    n_moments <- ((k * (k-1))/2 + (k * (k-1) * (k-2) * (k-3)) / 24)
+
+  }
   # Convert A_est and B_est to R arrays if they are torch tensors.
   if (inherits(A_est, "torch_tensor")) A_est <- as.array(A_est)
   if (inherits(B_est, "torch_tensor")) B_est <- as.array(B_est)
   
   # Count effective parameters: those with absolute value greater than threshold.
   k_eff <- sum(abs(A_est) > threshold) + sum(abs(B_est) > threshold) 
-  AIC_val <- n_used * log(SSE / n_used) + (2 * k_eff)
+  AIC_val <- n_moments * log(SSE / n_moments) + (2 * k_eff)
   
   return(list(AIC = AIC_val, SSE = SSE, k_eff = k_eff))
 }
@@ -449,6 +456,7 @@ compute_AIC <- function(raw_loss, A_est, B_est,k, n_used, threshold = 0.001) {
 #' @param B_est A torch tensor (or array) for the estimated matrix B.
 #' @param n_used Number of observations used in the loss calculation.
 #' @param threshold Numeric; entries smaller than this in absolute value are treated as zero.
+#' @param third Are third moments to be considered?
 #'
 #' @return A list with elements:
 #'   \item{BIC}{The computed BIC value.}
@@ -456,17 +464,22 @@ compute_AIC <- function(raw_loss, A_est, B_est,k, n_used, threshold = 0.001) {
 #'   \item{k_eff}{The effective number of parameters.}
 #'
 #' @export
-compute_BIC <- function(raw_loss, A_est, B_est,k, n_used, threshold = 0.001) {
+compute_BIC <- function(raw_loss, A_est, B_est,k, threshold = 0.001,third=TRUE) {
   # raw_loss is assumed to be the MSE (i.e. SSE/moments) 
   SSE <- raw_loss * ((k * (k-1))/2 + (k * (k-1) * (k-2)) /6  + (k * (k-1) * (k-2) * (k-3)) / 24)
-  
+  if(third==TRUE){
+    n_moments <- ((k * (k-1))/2 + (k * (k-1) * (k-2)) /6  + (k * (k-1) * (k-2) * (k-3)) / 24)
+  } else{
+    n_moments <- ((k * (k-1))/2 + (k * (k-1) * (k-2) * (k-3)) / 24)
+
+  }
   # Convert A_est and B_est to R arrays if they are torch tensors.
   if (inherits(A_est, "torch_tensor")) A_est <- as.array(A_est)
   if (inherits(B_est, "torch_tensor")) B_est <- as.array(B_est)
   
   # Count effective parameters: those with absolute value greater than threshold.
   k_eff <- sum(abs(A_est) > threshold) + sum(abs(B_est) > threshold) 
-  BIC_val <- n_used * log(SSE / n_used) + (log(n_used) * k_eff)
+  BIC_val <- n_moments  * log(SSE / n_moments)  + (log(n_moments) * k_eff)
   
   return(list(BIC = BIC_val, SSE = SSE, k_eff = k_eff))
 }
