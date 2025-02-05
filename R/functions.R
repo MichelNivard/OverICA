@@ -739,12 +739,12 @@ grid_search_overica <- function(data, k, moment_func, error_cov = NULL, maskB = 
                                    clip_grad = clip_grad, num_runs = num_runs)
         loss_here <- as.numeric(res$best_result$raw_loss)
         if(crit== "AIC"){
-        aic_val <- compute_AIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k, ,threshold = threshold,third=third)$AIC
+        aic_val <- compute_AIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k ,threshold = threshold,third=third)$AIC
         cat("Iteration completed with AIC:", aic_val,"\n")
         grid_losses[i, j] <- aic_val
         }
         if(crit== "BIC"){
-          bic_val <- compute_BIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k,,threshold = threshold,third=third)$BIC
+          bic_val <- compute_BIC(loss_here, res$best_result$A_est, res$best_result$B_est,k=k,threshold = threshold,third=third)$BIC
           cat("Iteration completed with BIC:", bic_val,"\n")
           grid_losses[i, j] <- bic_val
           }
